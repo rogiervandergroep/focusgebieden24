@@ -1,0 +1,351 @@
+---
+title: "Factsheet Aanpak Noord"
+subtitle: "Tuindorp Nieuwendam"
+author: "Onderzoek en Statistiek (O&S) | gemeente Amsterdam"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    includes:
+      in_header: assets/head.html
+    css: assets/style/os-style.css
+---
+
+```{r setup, include=FALSE}
+
+# Factsheet Tuindorp Nieuwendam NN : Tuindorp Nieuwendam-West en Tuindorp Nieuwendam-Oost
+library(knitr)
+library(tidyverse)
+library(patchwork)
+library(sf)
+
+opts_chunk$set(
+  fig.width=10,
+  dev = "svg",
+  echo = FALSE,
+  warning = FALSE,
+  out.extra = 'style="float:left;"', 
+  options(knitr.table.format = "html")
+  )
+
+plot_list_groot <- read_rds("03 tussentijds/plot_list_NN.rds")
+
+plot_list   <- plot_list_groot$plot_list
+bar_list    <- plot_list_groot$bar_list
+wijknaam    <- plot_list_groot$wijknaam
+kaart       <- plot_list_groot$kaart
+kaart_thema <- plot_list_groot$kaart_thema
+
+grDevices::windowsFonts("Amsterdam Sans" = grDevices::windowsFont("Amsterdam Sans"))
+
+font <- "Amsterdam Sans"
+
+```
+
+<div class="blue-background">
+In deze factsheet wordt de ontwikkeling besproken van de buurten in de wijk Volewijck in Amsterdam Noord op basis van indicatoren zoals die vastgesteld zijn in het beleidsprogramma *Aanpak Noord*. In dit programma wordt de aandacht gevestigd op buurten die op verschillende punten achterlopen ten opzichte van andere delen van stadsdeel Noord. Doelstellingen om de positie van deze buurten te versterken zijn gebundeld rondom zes thema's:
+
+Kansen voor jeugd: minder achterstanden en meer perspectief\
+Kansrijke sociale buurten: samen werken aan meer veerkracht\
+Wonen: opknappen en verduurzamen\
+Openbare ruimte: achterstanden wegwerken en kwaliteit verbeteren\
+Stadsnatuur en groen: Noord als natuurgebied\
+Buurteconomie: Behouden en versterken\ 
+
+In deze factsheet richten we ons zoveel mogelijk op het niveau van de buurt. Wanneer de data op dit niveau niet beschikbaar is, wordt de data gepresenteerd op wijkniveau.
+</div>
+
+#### Samenvatting
+Tuindorp Nieuwendam bestaat uit de buurten Tuindorp Nieuwendam-West en Tuindorp Nieuwendam-Oost, die beide Aanpak Noord-buurten zijn. In tegenstelling tot de trend in Noord en Amsterdam kennen beide buurten van Tuindorp-Nieuwendam een afname van het inwonertal sinds 2017. In Tuindorp Nieuwendam-West zien we wel een stijging van het aandeel minderjarige inwoners, maar in beide buurten wonen veel ouderen.Desondanks wonen er in Tuindorp Nieuwendam-Oost realtief meer huishoudens met kinderen. In beide buurten is het aandeel eenoudergezinnen gestegen en ook veel hoger dan in Noord. 
+
+De woningvoorraad is in beide buurten nagenoeg gelijk gebleven sinds 2017, terwijl Noord juist een sterke groei van het aantal woningen kent. Beide buurten tellen relatief veel corporatiewoningen en relatief veel woningen met een laag energielabel. De tevredenheid met de eigen woning wordt in Tuindorp Nieuwendam-West beter beoordeeld dan in Tuindorp Nieuwendam-Oost en gemiddeld in Noord. De sociale cohesie wordt in Tuindorp Nieuwendam hoger gewaardeerd dan in Noord maar neemt wel af. De buurttevredenheid is in beide buurten van Tuindorp Nieuwendam hoger dan gemiddeld in Noord en de Aanpak Noord-buurten. Wel is men relatief minder positief over de verwachte buurtontwikkeling. 
+
+De twee Aanpak Noord-buurten in Tuindorp Nieuwendam hebben een lager gemiddeld inkomen dan gemiddeld in Noord. Wel ligt het aandeel inwoners met een laag inkomen en weinig vermogen relatief laag ten opzichte van de andere Aanpak Noord-buurten.  Tuindorp Nieuwendam-Oost telt verhoudingsgewijs veel bijstandsontvangers. De twee buurten scoren wisselend op gezondheidsindicatoren: het aandeel inwoners met een (zeer) hoge gezondheid ligt er lager dan in Noord en ook is er vaker sprake van overgewicht. Het aandeel inwoners met ernstige psychische klachten ligt er echter lager dan het stadsdeelgemiddelde. Tuindorp Nieuwendam-Oost kent een sterke groei van het aandeel jongeren tussen 18 en 22 jaar zonder startkwalificatie. Het aandeel inwoners in de meest kwetsbare positie ligt in beide buurten iets hoger dan gemiddeld in Noord.
+
+```{r kaart_noord, fig.cap = captext, fig.alt = captext}
+
+captext = "Stadsdeel Noord met Tuindorp Nieuwendam (rood) en Aanpak Noord-buurten Tuindorp Nieuwendam-West en Tuindorp Nieuwendam-Oost (donkerblauw)"
+
+kaart
+
+```
+
+#### Demografische ontwikkeling: inwoners en huishoudens
+De bevolking is de afgelopen jaren sterk gegroeid in Noord tot bijna 109 duizend inwoners in 2024. Tuindorp Nieuwendam kende echter juist een afname van het inwonertal, hoewel in Tuindorp Nieuwendam-West het inwonertal sinds 2023 weer licht stijgt. Het aandeel 0 tot 18-jarigen neemt in Noord en Amsterdam af, maar in Tuindorp Nieuwendam-West juist sterk toe. In Tuindorp Nieuwendam-Oost ligt echter het aandeel minderjarige inwoners veel hoger dan in Tuindorp Nieuwendam-West. Beide buurten tellen veel meer inwoners van 66 jaar of ouder dan gemiddeld in Noord. Dat geldt het sterkste voor Tuindorp Nieuwendam-West.
+
+```{r fig_bevoling, fig.alt = captext, fig.height = 10}
+
+captext = "figuur met bevolkingsontwikkeling in Amsterdam, Stadsdeel Noord en Aanpak Noord buurten"
+
+plot_list$bevtotaal_groei/
+plot_list$bev0_18_p/
+plot_list$bev66plus_p
+
+```
+
+Het aandeel huishoudens met kinderen is in Tuindorp Nieuwendam-West lager dan in Noord, maar in Tuindorp Nieuwendam-Oost hoger. In beide buurten neemt dit aandeel af, maar minder snel dan gemiddeld in Noord. Opvallend is dat in Noord het aandeel eenoudergezinnen afneemt, maar dit in beide Aanpak Noord-buurten toeneemt. Het aandeel ligt in beide buurten ook veel hoger dan gemiddeld in het stadsdeel. 
+
+```{r fig_huish, fig.alt = captext, fig.height= 8}
+
+captext = 'ontwikkeling huishoudtypen in Noord en Aanak Noord-buurten'
+
+plot_list$bevhhmkind_p/
+plot_list$beveenouderhh_p
+
+```
+
+#### Waardering woning en woonomgeving
+
+Er zijn in Amsterdam en in stadsdeel Noord veel nieuwe woningen bijgebouwd. In 2024 telt de stad 480.735 woningen, waarvan er 51.438 in Noord staan. In Tuindorp Nieuwendam-West en Tuindorp Nieuwendam-Oost is het aantal woningen gelijk gebleven. De ontwikkeling van de woningvoorraad blijft daarmee ook achter bij de andere Aanpak Noord-buurten.
+
+```{r woning_groei, fig.alt = captext, fig.height = 6 }
+
+captext = "ontwikkeling woingvoorraad"
+
+kaart_thema$wvoorrbag_groei
+
+```
+Het aandeel corporatiewoningen is in Tuindorp Nieuwendam-West en Tuindorp Nieuwendam-Oost veel hoger dan gemiddeld in Noord. Het aandeel neemt in Tuindorp Nieuwendam-West wel iets af. Nieuwbouw en verkoop van corporatiewoningen trekken in Amsterdam (en in Noord) nieuwe groepen Amsterdammers aan die we nieuwe stedelingen noemen. Dit zijn Amsterdammers die na hun 18e in Amsterdam zijn komen wonen. In Noord is het aandeel van deze groep inwoners gestegen. In Tuindorp Nieuwendam-West is hun aandeel veel kleiner dan in Noord, maar in Tuindorp Nieuwendam-Oost is deze groep sterker vertegenwoordigd. Het aandeel nieuwe stedelingen blijft in beide buurten redelijk stabiel.
+
+```{r woonfiguur, fig.alt = captext, fig.height = 10 }
+
+captext = 'ontwikkeling woningvoorraad'
+
+  plot_list$wvoorrbag_groei/
+  plot_list$wcorhuur_p/
+  plot_list$bevnstedeling_p
+
+```
+
+In Amsterdam en in stadsdeel Noord zijn zijn veel woningen inmiddels verduurzaamd. Hierdoor is het aandeel woningen met een laag energielabel gedaald. In beide buurten van Tuindorp Nieuwendam ligt dit aandeel echter aanzienlijk hoger dan gemiddeld in Noord en de andere Aanpak Noord-buurten. In Tuindorp Nieuwendam-Oost ligt het aandeel woningen met een laag energielabel bijna twee keer zo hoog als in Tuindorp Nieuwendam-West.
+
+```{r,  fig.alt = captext, fig.height = 6}
+
+captext = 'kaart met aandeel woningen met een laag energielabel'
+
+kaart_thema$wlabelefg_p
+
+```
+
+De tevredenheid met de eigen woning wordt in Tuindorp Nieuwendam-West beter beoordeeld dan in Tuindorp Nieuwendam-Oost en gemiddeld in Noord. Tuindorp Nieuwendam-Oost scoort lager dan gemiddeld in Noord. De tevredenheid over het onderhoud van de eigen corporatiewoning ligt in beide buurten lager dan gemiddeld in Noord, maar is in Tuindorp Nieuwendam-West veel hoger dan in Tuindorp Nieuwendam-Oost.
+
+```{r woononderh, fig.alt = captext, fig.height = 10 }
+
+captext = 'tevredenheid met de woning en mate van duurzaamheid'
+
+plot_list$wlabelefg_p/
+plot_list$wwoning_r/
+plot_list$wonderhoudwoning_r
+
+```
+
+De mate van interactie en samenwerking tussen bewoners is in kaart gebracht door een sociale cohesie-maat die zijn oorsprong vindt in verschillende enquêtevragen uit de Veiligheidsmonitor. Hoe prettiger de omgang, hoe hoger het rapportcijfer voor de mate van sociale cohesie. De afgelopen jaren is dit rapportcijfer voor de stad en Noord stabiel gebleven na een sterke stijging tussen 2020 en 2021. In Tuindorp Nieuwendam zien we echter een afname na 2022, maar het aandeel ligt er wel hoger dan in Noord gemiddeld. In Tuindorp Nieuwendam-Oost werd de sociale cohesie in 2020 hoger gewaardeerd dan in Noord. Vanwege een nieuwe onderzoeksmethodiek was het niet mogelijk om voor recente jaren de mate van sociale cohesie op buurtniveau te berekenen. De betrokkenheid van buurtbewoners bij de buurt wordt in beide Aanpak Noord-buurten hoger gewaardeerd dan in Noord, al is er vooral in Tuindorp Nieuwendam-West wel sprake van een afname.
+
+```{r fig.alt = captext, fig.height = 8}
+
+fig.cap = 'sociale cohesie en buurtbetrokkenheid'
+
+# toevoegen burgermonitor totaal noord?
+# Sociale cohesie tot 2023 gemeente, sd, wijk maar niet voor buurt (tot 2020): nagevraagd bij Anne: is inderdaad niet beschikbaar op buurtniv.
+
+plot_list$lsoccoh_r/
+plot_list$lbetrokken_r
+
+```
+
+Het gemiddelde rapportcijfer voor de ervaren tevredenheid met de eigen buurt is in beide buurten vrijwel gelijk, en veel hoger dan gemiddeld in Noord en de Aanpak Noord-buurten. Wel is er ten opzichte van 2021 sprake van een daling. In beide buurten geven bewoners wel een lager rapportcijfer voor de verwachte ontwikkeling van de buurt dan in Noord. Tot 2021 lag het rapportcijfer in beide buurten hoger, maar sindsdien heeft er vooral in Tuindorp Nieuwendam-Oost een sterke daling opgetreden. Het oordeel over het aanbod buurthuizen en wijkcentra ligt in Tuindorp Nieuwendam-West lager dan in Tuindorp Nieuwendam-Oost en Noord.
+
+```{r fig.alt = captext, fig.height = 6}
+
+fig.cap = "kaart met rapportcijfers per buurt"
+
+kaart_thema$lbuurt_r
+
+```
+
+```{r fig.alt = captext, fig.height = 12}
+
+
+fig.cap = 'tevredenheid buurt'
+
+plot_list$lbuurt_r/
+plot_list$lverwachtingbuurt_r/
+plot_list$wzbuurthuizen_r
+
+```
+
+Tussen 2019 en 2023 is het rapportcijfer voor het onderhoud van groen gestegen in Tuindorp Nieuwendam-West en dit ligt daar net onder het gemiddelde van Noord. In Tuindorp Nieuwendam-Oost ligt het rapportcijfer voor onderhoud van groep juist lager dan in 2019, maar wel hoger dan gemiddeld in Noord. De waardering van het onderhoud van speelvoorzieningen is in beide buurten toegenomen sinds 2019, maar ligt in Tuindorp Nieuwendam-Oost hoger dan gemiddeld in Noord en in Tuindorp Nieuwendam-West onder het stadsdeelgemiddelde. Het rapportcijfer voor het onderhoud van straten en stoepen ligt in beide Aanpak Noord-buurten lager dan gemiddeld in Noord. Tuindorp Nieuwendam-West kent wel een toename.
+
+```{r fig.alt = captext, fig.height= 10}
+
+fig.cap = 'onderhoud publieke ruimte in Noord'
+
+plot_list$oronderhoudgroen_r/
+plot_list$oronderhoudspelen_r/
+plot_list$oronderhoudstraten_r
+
+```
+
+#### Stadsnatuur en Groen
+
+In stadsdeel Noord is het aandeel publiek groen (inclusief agrarisch groen, parken en natuurgebieden) een stuk hoger dan in de rest van de stad. In Tuindorp Nieuwendam-Oost en Tuindorp Nieuwendam-West is het aandeel publiek groen en het publiek groen per inwoner veel lager.
+
+```{r fig.alt = captext, fig.height = 8}
+
+#Dit is eigenlijk best gek dat het percentage publiekelijk groen zomaar toeneemt: Nico vragen?
+
+captext = 'publiekelijk groen in Noord'
+
+bar_list$orpubgroen_p/
+bar_list$orpubgroen_inw
+
+```
+
+#### Besteedbaar inkomen en armoede
+
+Het gemiddeld besteedbaar inkomen ligt in Amsterdam op 48.700 euro in 2021; in Noord op 42.100 euro. In beide Aanpak Noord-buurten is dit gemiddelde inkomen gestegen, maar de bedragen liggen nog steeds onder het gemiddelde in Noord. 
+
+Het aandeel inwoners met een laag inkomen en weinig vermogen is zowel in Noord als in de twee Aanpak Noord-buurten afgenomen. Dit aandeel ligt in beide buurten ook lager dan gemiddeld in de Aanpak Noord-buurten.
+
+```{r fig.alt = captext,  fig.height = 6}
+
+captext = 'inwoners met laag inkomen'
+
+kaart_thema$iminhh130_p
+
+```
+
+Het aandeel inwoners van 15 tot en met 65 jaar dat een bijstandsuitkering ontvangt, neemt af in Noord, maar is in Tuindorp Nieuwendam-Oost wel hoger dan gemiddeld in Noord. In Tuindorp Nieuwendam-West ligt dit aandeel onder het stadsdeelgemiddelde maar is er wel sprake van een toename. Het aandeel jongeren in minimahuishoudens is in beide Aanpak Noord-buurten lager dan gemiddeld in Noord en neemt ook af.
+
+```{r figink, fig.alt = captext,  fig.height = 12}
+
+captext = 'inkomensontwikkeling in stadsdeel Noord'
+
+plot_list$ihhink_gem/
+bar_list$iminhh130_p/
+plot_list$iwwb_p/
+bar_list$iminjong130_p
+
+```
+
+#### Ervaren gezondheid
+
+Het aandeel inwoners met een (zeer) goede gezondheid neemt af en ligt in beide Aanpak Noord-buurten ook onder het gemiddelde van Noord en het gemiddelde van de Aanpak Noord-buurten.
+
+```{r   fig.alt = captext, fig.height = 6}
+
+captext = "kaart met aandeel dat zich gezond voelt in buurt (%)"
+
+kaart_thema$wzgezond_p
+
+```
+
+Het aandeel inwoners met ernstige psychische klachten is in Tuindorp Nieuwendam-Oost en Tuindorp Nieuwendam-West veel lager dan gemiddeld in Noord. Het aandeel stijgt wel sterk in beide buurten. Het aandeel inwoners met overgewicht is in beide buurten hoger dan het stadsdeelgemiddelde, en is bovendien licht toegenomen.
+
+```{r fig.alt = captext, fig.height= 10}
+
+captext = 'diverse gezondheidsindicatoren in Noord'
+
+bar_list$wzgezond_p/   
+bar_list$wzdepr_p/
+bar_list$wzzwaar_p
+
+```
+
+#### Kansen voor de jeugd
+
+In stadsdeel Noord hebben veel kinderen een taalachterstand. Sinds 2020 neemt het aandeel leerlingen uit groep 8 dat het streefniveau taal haalt toe. Het aandeel VVE indicaties ligt in beide Aanpak Noord-buurten onder het stadsdeelgemiddelde, en dit aandeel is vooral in Tuindorp Nieuwendam-West ook afgenomen. In beide buurten neemt het aandeel jongeren zonder startkwalificatie toe. Dit aandeel ligt in Tuindorp Nieuwendam-Oost ook veel hoger dan in Tuindorp Nieuwendam-West en het stadsdeel.
+
+```{r fig.alt = captext, fig.height = 10}
+
+captext = 'aandeel schoolverlaters zonder startkwalificatie'
+
+plot_list$ostrftaal_p/
+plot_list$ovveindi_p/
+plot_list$olsv_p
+
+```
+
+#### Werk en arbeidsmarkt
+
+```{r fig.alt = captext, fig.height = 10}
+
+# alleen Noord en Amsterdam ?
+# bar_list$werkopl_1866_hbowo_p/
+# bar_list$werkopl_1866_max_mbo1_p/
+# bar_list$werkopl_1866_mbo2_4_havovwo_p
+
+```
+
+De economische zelfstandigheid van vrouwen is toegenomen in Noord en Tuindorp Nieuwendam-Oost, maar gelijk gebleven in Tuindorp Nieuwendam-West. Beide buurten scoren iets boven het stadsdeelgemiddelde. Het aandeel werkenden in loondienst met een flexibel dienstverband ligt in beide buurten ruim onder het gemiddelde van Noord. Dit aandeel neemt in Tuindorp Nieuwendam-Oost af, maar in Tuindorp Nieuwendam-West toe.
+
+```{r figzelf, fig.alt = captext, fig.height = 8}
+
+captext = 'figuur economische zelfstandigheid vrouwen en aandeel beroepsbevolking zonder vast contract'
+
+bar_list$econzelfstvrw_p/
+plot_list$p_flex_ldienst_18_66
+
+```
+
+#### Kwetsbare groepen
+
+Het aantal kwetsbare groepen in een wijk of buurt wordt benaderd door na te gaan hoe hoog bewoners scoren op basis van een kwetsbaarheidsscore. De kwetsbaarheidsscore heeft een waarde tussen 0 en 4 en geeft aan op hoeveel hulpbronnen iemand kwetsbaar is (werk, opleiding, inkomen en/of gezondheid). Personen met een score van 3 of 4 worden tot de meest kwetsbaren gerekend. Zij scoren laag op minstens drie van de volgende hulpbronnen; een besteedbaar huishoudinkomen in de laagste 20 procent; hogere ziektekosten dan gemiddeld in Amsterdam; een laag opleidingsniveau.
+
+Het aandeel inwoners in de meest kwetsbare positie ligt in beide buurten iets hoger dan gemiddeld in Noord, maar lager dan gemiddeld in de Aanpak Noord-buurten. Waar dit aandeel schommelt in Tuindorp Nieuwendam-Oost, is er in Tuindorp Nieuwendam-West sprake van een afname. Het aandeel kwetsbaren onder minderjarige inwoners blijft in Noord stabiel, maar is in Tuindorp Nieuwendam-Oost afgenomen. Het aandeel ketsbare 65-plussers schommelt en ligt in beide buurten boven het gemiddelde van Noord.
+
+```{r fig.alt = captext, fig.height = 6}
+
+captext = "aandeel kwetsbaren (%)"
+
+kaart_thema$skkwets34_p
+
+```
+
+```{r fig_kwetsbaar, fig.alt = captext,  fig.height = 10 }
+
+captext = 'figuur met kwetsbare groepen in Amsterdam en Noord'
+
+plot_list$skkwets34_p/
+plot_list$sk017_kwets34_p/
+plot_list$sk66plus_kwets34_p
+
+```
+
+#### Buurteconomie
+Het aantal vestigingen is gegroeid in Noord. In 2023 zijn er 14.577 vestigingen. Het aantal vestigingen is in Tuindorp Nieuwendam-Oost (131) en Tuindorp Nieuwendam-West (301) relatief laag, en neemt ook minder snel toe dan gemiddeld in Noord. Het aantal werkzame personen per 1.000 inwoners ligt in beide buurten ruim onder het stadsdeelgemiddelde. Het aandeel starters is in beide buurten lager dan gemiddeld in Noord, en is vooral in Tuindorp Nieuwendam-West afgenomen. Zowel Tuindorp Nieuwendam-Oost als Tuindorp Nieuwendam-West telt relatief veel zzp'ers. Dit aandeel is sinds 2017 ook toegenomen.
+
+```{r buurtec, fig.alt = captext, fig.height = 12}
+
+captext = 'figuur met ontwikkeling van vestigingen zzp-ers in Noord'
+
+plot_list$bhwp_1000inw/
+plot_list$bhvest_groei/
+plot_list$bhstart_p/
+plot_list$bhzzp_p
+
+```
+Het aanbod van winkels voor dagelijkse boodschappen wordt in Tuindorp Nieuwendam-West beter beoordeeld dan gemiddeld in Noord, en in Tuindorp Nieuwendam-Oost minder goed. Beide buurten kennen wel een sterke daling van het rapportcijfer ten opzichte van 2021. De tevredenheid met het horeca-aanbod is in beide buurten wat hoger dan gemiddeld in Noord. De twee buurten hebben wel een tegenstelde trend: het rapportcijfer daalt in Tuindorp Nieuwendam-Oost en stijgt in Tuindorp Nieuwendam-West. De leegstand van winkelvloeroppervlak en verkooppunten is in Tuindorp Nieuwendam veel hoger dan in Noord en de laatste jaren ook toegenomen.
+
+```{r buurtec2, fig.alt = captext, fig.height = 12}
+
+captext = 'figuur met rapportcijfers winkelaanbod en horecaaanbod in Noord'
+
+plot_list$bhwinkelaanbod_r/
+plot_list$bhhorecaaanbod_r/
+plot_list$bhlocoppleegstand_p/
+plot_list$bhlocvkpleegstand_p
+```
+
+Meer informatie over het programma Aanpak Noord is te vinden op de website [Aanpak Noord](https://www.amsterdam.nl/stadsdelen/noord/aanpak-noord/). Een overzicht van de geselecteerde indicatoren en van alle data op buurt-, wijk- en stadsdeelniveau is te vinden op de [website van Onderzoek en Statistiek](https://onderzoek.amsterdam.nl/dataset/focusgebieden)
+
+<div class="blue-background">
+#### Colofon
+Deze factsheet is geschreven door\
+Rogier van der Groep, Bart Sleutjes, Eva Karaçay en Idske de Jong\
+in opdracht van Stadsdeel Noord, Aanpak Noord\
+Gemeente Amsterdam juni 2024
+
+Onderzoek en Statistiek\
+onderzoek.amsterdam.nl\
+Gemeente Amsterdam
+</div>

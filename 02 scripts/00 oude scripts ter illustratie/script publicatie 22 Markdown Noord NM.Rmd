@@ -1,0 +1,356 @@
+---
+title: "Factsheet Aanpak Noord"
+subtitle: "Tuindorp Buiksloot"
+author: "Onderzoek en Statistiek (O&S) | gemeente Amsterdam"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    includes:
+      in_header: assets/head.html
+    css: assets/style/os-style.css
+---
+
+```{r setup, include=FALSE}
+
+# Factsheet NM Tuindorp Buiksloot
+
+library(knitr)
+library(tidyverse)
+library(patchwork)
+library(sf)
+
+
+opts_chunk$set(
+  dev = "svg",
+  echo = FALSE,
+  warning = FALSE,
+  fig.width  = 10,
+  options(knitr.table.format = "html")
+  )
+
+plot_list_groot <- read_rds("03 tussentijds/plot_list_NM.rds")
+
+plot_list   <- plot_list_groot$plot_list
+bar_list    <- plot_list_groot$bar_list
+wijknaam    <- plot_list_groot$wijknaam
+kaart       <- plot_list_groot$kaart
+kaart_thema <- plot_list_groot$kaart_thema
+
+grDevices::windowsFonts("Amsterdam Sans" = grDevices::windowsFont("Amsterdam Sans"))
+#grDevices::windowsFonts("Corbel" = grDevices::windowsFont("Corbel"))
+
+font <- "Amsterdam Sans"
+
+```
+
+<div class="blue-background">
+In deze factsheet wordt de ontwikkeling besproken van de buurten in de wijk Volewijck in Amsterdam Noord op basis van indicatoren zoals die vastgesteld zijn in het beleidsprogramma *Aanpak Noord*. In dit programma wordt de aandacht gevestigd op buurten die op verschillende punten achterlopen ten opzichte van andere delen van stadsdeel Noord. Doelstellingen om de positie van deze buurten te versterken zijn gebundeld rondom zes thema's:
+
+Kansen voor jeugd: minder achterstanden en meer perspectief\
+Kansrijke sociale buurten: samen werken aan meer veerkracht\
+Wonen: opknappen en verduurzamen\
+Openbare ruimte: achterstanden wegwerken en kwaliteit verbeteren\
+Stadsnatuur en groen: Noord als natuurgebied\
+Buurteconomie: Behouden en versterken\ 
+
+In deze factsheet richten we ons zoveel mogelijk op het niveau van de buurt. Wanneer data op dit niveau niet beschikbaar zijn, worden de data gepresenteerd op wijkniveau.
+</div>
+
+#### Samenvatting
+ Het aandeel woningen met een laag energielabel ligt in de buurt hoger dan in Noord. De tevredenheid met de eigen woning is in Blauwe Zand ongeveer gelijk aan Noord, de buurttevredenheid ligt er echter hoger dan in het stadsdeel. Bewoners zijn in Blauwe Zand ook optimistischer over de buurtontwikkeling. De buurt kenmerkt zich ten opzichte van Noord door een hoge mate van betrokkenheid onder bewoners, en een hoge mate van tevredenheid met het onderhoud van groen en speelvoorzieningen.Er is wel meer armoede dan in Noord: het gemiddeld besteedbaar inkomen ligt in Blauwe Zand lager en het aantal bijstandsontvangers hoger. Blauwe Zand scoort iets ongunstiger dan Noord op de meeste gezondheidsindicatoren, uitzondering is het aandeel bewoners met psychische klachten dat lager ligt in de buurt. De buurt telt minder VVE-indicaties dan Noord, maar wel meer jongeren zonder startkwalificatie. Ook zijn er minder werkenden met een flexibel contract. Er zijn in Blauwe Zand relatief veel inwoners met een kwetsbare situatie, maar het aandeel kwetsbare minderjarigen neemt wel af. De wijkeconomie kenmerkt zich door een relatief hoog aandeel starters en zzp'ers. Recent neemt de leegstand in de buurt toe.
+
+```{r kaart_noord, fig.cap= captext, fig.alt=captext}
+
+kaart
+
+captext = "Figuur: Stadsdeel Noord met Tuindorp Buiksloot (rood) en Aanpak Noord-buurt Blauwe Zand (donkerblauw)"
+
+```
+
+#### Demografische ontwikkeling: inwoners en huishoudens 
+De bevolking is de afgelopen jaren sterk gegroeid in Noord tot bijna 109 duizend inwoners in 2024. Tuindorp Buiksloot wijkt af van deze trend: het aantal inwoners bleef de laatste jaren stabiel, maar ligt onder het niveau van 2017. Deze wijk telt in 2024 bijna tweeduizend inwoners en bestaat enkel uit de Aanpak Noord-buurt Blauwe Zand. Het aandeel inwoners van 0 tot 18 jaar neemt in Blauwe Zand wel toe, waar we in Noord juist een daling zien. Dit aandeel ligt in 2024 op het stadsdeelgemiddelde. Het aandeel inwoners van 66 jaar en ouder neemt ook toe in Blauwe Zand, en ligt aanzienlijk hoger dan in Noord.
+
+```{r fig.alt = captext,  fig.height = 10}
+
+captext = "figuur met bevolkingsontwikkeling in Amsterdam, Stadsdeel Noord en Aanpak Noord buurten"
+
+  plot_list$bevtotaal_groei/
+  plot_list$bev0_18_p/
+  plot_list$bev66plus_p
+
+```
+
+Blauwe Zand telt vergeleken met Noord relatief veel huishoudens met kinderen en ook veel eenoudergezinnen. Zowel het aandeel huishoudens met kinderen als het aandeel eenoudergezinnen neemt in Noord af, maar blijft in Blauwe Zand stabiel na een eerdere toename.
+
+```{r  fig.alt = captext, fig.height = 6}
+
+captext = 'ontwikkeling huishoudtypen in Noord en Aanak Noord-buurten'
+
+  plot_list$bevhhmkind_p/
+  plot_list$beveenouderhh_p
+
+```
+
+#### Waardering woning en woonomgeving
+
+Er zijn in Amsterdam en in Noord veel nieuwe woningen bijgebouwd. In 2024 zijn er 480.735 woningen in de stad, waarvan 51.438 in Noord. 
+
+```{r woning_groei, fig.alt = captext, fig.height = 6 }
+
+captext = "ontwikkeling woingvoorraad"
+
+kaart_thema$wvoorrbag_groei
+
+```
+
+Het aandeel corporatiewoningen ligt met 80 procent veel hoger dan gemiddeld in Noord en blijft de laatste jaren stabiel. 
+
+```{r  fig.alt = captext, fig.height = 8 }
+
+captext = 'ontwikkeling woningvoorraad'
+
+  plot_list$wvoorrbag_groei/
+  plot_list$wcorhuur_p/
+  plot_list$bevnstedeling_p
+
+```
+
+In Amsterdam en in Noord zijn veel woningen inmiddels verduurzaamd. Hierdoor is het aandeel woningen in de stad met een laag energielabel flink gedaald. 
+
+```{r,  fig.alt = captext, fig.height = 6}
+
+captext = 'kaart met aandeel woningen met een laag energielabel'
+
+kaart_thema$wlabelefg_p
+
+```
+
+
+
+```{r fig.alt = captext, fig.height = 8 }
+
+captext = 'tevredenheid met de woning en duurzaamheid'
+
+  plot_list$wwoning_r/  
+  plot_list$wlabelefg_p/
+  plot_list$wonderhoudwoning_r
+
+```
+
+De mate van interactie en samenwerking tussen bewoners is in kaart gebracht door een sociale cohesie-maat die zijn oorsprong vindt in verschillende enquêtevragen uit de Veiligheidsmonitor. Hoe prettiger de omgang, hoe hoger dit rapportcijfer voor de mate van sociale cohesie. De afgelopen jaren is dit rapportcijfer voor de stad en Noord stabiel gebleven, nadat tussen 2020 en 2021 een sterke stijging plaatsvond. In Blauwe Zand ligt het oordeel over sociale cohesie in 2020 ongeveer gelijk aan gemiddeld in Noord. Vanwege een nieuwe onderzoeksmethodiek was het niet mogelijk om voor recente jaren de mate van sociale cohesie op buurtniveau te berekenen. De ervaren betrokkenheid van buurtbewoners met de buurt is in Blauwe Zand hoger dan in Noord en neemt de laatste jaren ook toe.
+
+```{r fig.alt = captext, fig.height = 6}
+
+# Sociale cohesie voor buurten niet tot 2023 maar 2020?
+
+fig.cap = 'sociale cohesie ne buurtbetrokkenheid'
+
+plot_list$lsoccoh_r/
+plot_list$lbetrokken_r
+
+```
+
+Het rapportcijfer voor de tevredenheid met de eigen buurt ligt in Noord iets lager dan het stedelijk gemiddelde. 
+
+```{r fig.alt = captext, fig.height = 6}
+
+fig.cap = "kaart met rapportcijfers per buurt"
+
+kaart_thema$lbuurt_r
+
+```
+
+Hetzelfde patroon zien we bij het rapportcijfer voor de verwachte buurtontwikkeling. Over het aanbod van buurthuizen geven de bewoners in Blauwe Zand een hoger cijfer dan gemiddeld in Noord. Wel neemt het rapportcijfer sinds 2021 licht af.
+
+```{r fig.alt = captext, fig.height = 10} 
+
+  plot_list$lbuurt_r/
+  plot_list$lverwachtingbuurt_r/
+  plot_list$wzbuurthuizen_r
+
+```
+
+De waardering met betrekking tot het het onderhoud van het groen en speelvoorzieningen is in Blauwe Zand hoger dan gemiddeld in Noord, en het rapportcijfer is de laatste jaren ook toegenomen. De tevredenheid met het onderhoud van straten en stoepen ligt is Blauwe Zand ook hoger dan in Noord, maar sinds 2021 is er wel sprake van een afname. Het rapportcijfer met betrekking tot het gevoel van veiligheid is licht gestegen.
+
+```{r fig.alt = captext, fig.height = 14}
+
+fig.cap = 'onderhoud publieke ruimte in Noord'
+
+plot_list$oronderhoudgroen_r/
+plot_list$oronderhoudspelen_r/
+plot_list$oronderhoudstraten_r/
+plot_list$vveiligavond_r
+
+```
+
+In stadsdeel Noord is het aandeel groen een stuk hoger dan in de rest van de stad. Blauwe Zand kent echter veel minder publiek groen dan gemiddeld in Noord en Amsterdam. Het aandeel publiek groen per 1.000 inwoners ligt in Blauwe Zand nog lager.
+
+```{r fig.alt = captext, fig.height = 6, fig.width= 12 } 
+
+#alleen 2020 en geen Amsterdam?
+
+captext = 'publiekelijk groen in Noord'
+
+bar_list$orpubgroen_p/
+bar_list$orpubgroen_inw
+
+```
+
+#### Besteedbaar inkomen en armoede
+
+Het gemiddeld besteedbaar inkomen ligt in Amsterdam op 48.700 euro in 2021 en in Noord op 42.100 euro. Dit bedrag is gestegen in Noord en in Blauwe Zand, 
+
+```{r fig.alt = captext,  fig.height = 6}
+
+captext = 'inwoners met laag inkomen'
+
+kaart_thema$iminhh130_p
+
+```
+
+
+
+```{r fig.alt = captext, fig.height = 10, fig.width= 14}
+
+captext = 'inkomensontwikkeling in stadsdeel Noord'
+
+plot_list$ihhink_gem/
+bar_list$iminhh130_p/
+plot_list$iwwb_p/
+bar_list$iminjong130_p
+
+```
+
+#### Ervaren gezondheid
+
+Blauwe Zand telt een lager aandeel bewoners met een (zeer) goede gezondheid dan Noord en de andere Aanpak Noord-buurten, en dit aandeel is ook afgenomen sinds 2020.
+
+```{r   fig.alt = captext, fig.height = 6}
+
+captext = "kaart met aandeel dat zich gezond voelt in buurt (%)"
+
+kaart_thema$wzgezond_p
+
+```
+
+Het aandeel inwoners met (ernstige) psychische klachten ligt in Blauwe Zand lager dan in Noord, maar is sinds 2020 wel sterk gestegen. Vergeleken met Noord voldoen in Blauwe Zand relatief iets minder bewoners aan de beweegnorm en hebben verhoudingsgewijs meer bewoners te maken met overgewicht/obesitas.
+
+```{r fig.alt = captext, fig.height= 10, fig.width= 12} 
+
+captext = 'diverse gezondheidsindicatoren in Noord'
+
+bar_list$wzgezond_p/   
+bar_list$wzdepr_p/
+bar_list$wzbeweeg_p/
+bar_list$wzzwaar_p
+
+```
+
+#### Kansen voor de jeugd
+
+Het aandeel leerlingen van groep 8 dat het streefniveau voor taal haalt is in Noord iets hoger dan het stedelijk gemiddelde. Van deze indicator zijn gegevens beschikbaar voor Blauwe Zand.
+
+Het aandeel kinderen met een VVE-indicatie ligt in Blauwe Zand lager dan gemiddeld in Noord. Tot 2021 was dit aandeel in Blauwe Zand aanzienlijk hoger dan in Noord, maar sindsdien is er sprake van een sterke daling. Het aandeel jongeren tussen 18 en 22 zonder startkwalificatie is in Blauwe Zand een stuk hoger dan gemiddeld in Noord. Wel is er recent sprake van een afname.
+
+```{r fig.alt = captext, fig.height = 9}
+
+#Streefniveau taal niet voor alle buurten?
+
+captext = 'aandeel schoolverlaters zonder startkwalificatie'
+
+plot_list$ostrftaal_p/
+plot_list$ovveindi_p/
+plot_list$olsv_p
+  
+```
+
+#### Werk en arbeidsmarkt
+
+```{r fig.alt = captext, fig.height = 8}
+
+# alleen Noord en Amsterdam ?
+
+# bar_list$werkopl_1866_hbowo_p/
+# bar_list$werkopl_1866_max_mbo1_p/
+# bar_list$werkopl_1866_mbo2_4_havovwo_p
+
+```
+
+Het aandeel jongeren met werk of opleiding is in Noord ongeveer gelijk aan dat in Amsterdam. Het aandeel vrouwen dat economisch zelfstandig is, is in Blauwe Zand ongeveer gelijk aan het gemiddelde in Noord, maar ligt wel onder het Amsterdamse gemiddelde. Het aandeel werkenden in loondienst met een flexibel dienstverband is in Blauwe Zand lager dan gemiddeld in Noord, maar neemt in lijn met de stedelijke trend wel toe sinds 2021.
+
+```{r fig.alt = captext, fig.height = 8, fig.width = 12}
+
+captext = 'figuur economische zelfstandigheid vrouwen en aandeel beroepsbevolking zonder vast contract'
+
+bar_list$econzelfstvrw_p/
+plot_list$p_flex_ldienst_18_66
+
+```
+
+#### Kwetsbare groepen
+
+De indicatoren met betrekking tot inkomen, opleiding, werk en gezondheid worden samengevat in een kwetsbaarheidsscore. Het aantal kwetsbare groepen in een wijk of buurt wordt benaderd door na te gaan hoe hoog bewoners scoren op basis van een kwetsbaarheidsscore. De kwetsbaarheidsscore heeft een waarde tussen 0 en 4 en geeft aan op hoeveel hulpbronnen iemand kwetsbaar is (werk, opleiding, inkomen en/of gezondheid). Personen met een score van 3 of 4 worden tot de meest kwetsbaren gerekend. Zij scoren laag op minstens drie van de volgende hulpbronnen; een besteedbaar huishoudinkomen in de laagste 20 procent; hogere ziektekosten dan gemiddeld in Amsterdammer; een laag opleidingsniveau.
+
+Het aandeel inwoners met een kwetsbare positie is in Blauwe Zand hoger dan gemiddeld in Noord en de Aanpak Noord-buurten. Wel neemt dit aandeel sinds 2020 af.
+
+```{r fig.alt = captext, fig.height = 6}
+
+captext = "aandeel kwetsbaren (%)"
+
+kaart_thema$skkwets34_p
+
+```
+
+Dat geldt ook voor het aandeel ouderen met een kwetsbare positie. Het aandeel minderjarigen met een kwetsbare positie is zelfs sterk afgenomen na 2020 en ligt nu ruim onder het gemiddelde van Noord.
+
+```{r fig.alt = captext, fig.height = 8 }
+
+captext = 'figuur met kwetsbare groepen in Amsterdam en Noord'
+
+plot_list$skkwets34_p/
+plot_list$sk017_kwets34_p/
+plot_list$sk66plus_kwets34_p
+
+```
+
+#### Buurteconomie
+Het aantal werkzame personen per 1000 inwoners ligt in Noord veel lager dan in Amsterdam, en in Blauwe Zand nog veel lager dan gemiddeld in Noord. Het aantal vestigingen is gegroeid in Noord. In 2023 zijn er 14.577 vestigingen. Ook in Blauwe Zand zien we een toename, in 2023 zijn er 161 vestigingen.
+
+```{r fig.alt = captext, fig.height = 12}
+
+captext = 'figuur met ontwikkeling van vestigingen zzp-ers in Noord'
+
+plot_list$bhwp_1000inw/
+plot_list$bhvest_groei/
+plot_list$bhstart_p/
+plot_list$bhzzp_p
+
+```
+
+Bewoners van Blauwe Zand zijn iets minder tevreden over het aanbod winkels voor dagelijkse boodschappen dan in Noord. Wel is het rapportcijfer sinds 2019 verbeterd, terwijl Noord juist een afname laat zien. De tevredenheid met het horeca-aanbod is juist iets hoger dan gemiddeld in Noord en neemt ook toe. De tevredenheid blijft wel ver achter bij het stedelijk gemiddelde. Het aandeel leegstaande winkelvloeroppervlakte en het aandeel leegstaande verkooppunten zijn beide toegenomen sinds 2023 en liggen ook boven het gemiddelde van Noord. Voorgaande jaren was er in Blauwe Zand juist minder leegstand dan in Noord en Amsterdam.
+
+```{r fig.alt = captext, fig.height = 11}
+
+
+captext = 'figuur met rapportcijfers winkelaanbod en horecaaanbod in Noord'
+
+plot_list$bhwinkelaanbod_r/
+plot_list$bhhorecaaanbod_r/
+plot_list$bhlocoppleegstand_p/
+plot_list$bhlocvkpleegstand_p
+
+```
+
+Meer informatie over het programma Aanpak Noord is te vinden op de website [Aanpak Noord](https://www.amsterdam.nl/stadsdelen/noord/aanpak-noord/).Een overzicht van de geselecteerde indicatoren en van alle data op buurt-, wijk- en stadsdeelniveau is te vinden op de [website van onderzoek en statistiek](https://onderzoek.amsterdam.nl/dataset/focusgebieden)
+
+<div class="blue-background">
+#### Colofon
+Deze factsheet is geschreven door\
+Rogier van der Groep, Bart Sleutjes, Eva Karaçay en Idske de Jong\
+in opdracht van Stadsdeel Noord, Aanpak Noord\
+Gemeente Amsterdam juni 2024
+
+Onderzoek en Statistiek\
+onderzoek.amsterdam.nl\
+Gemeente Amsterdam
+</div>

@@ -9,6 +9,13 @@
 # User-specific files
 .Ruserdata
 
+# databestanden
+00 ruwe data/
+01 indicatoren/
+03 tussentijds/
+04 tabellen/
+05 factsheets Noord DEF/
+
 # Example code in package build process
 *-Ex.R
 

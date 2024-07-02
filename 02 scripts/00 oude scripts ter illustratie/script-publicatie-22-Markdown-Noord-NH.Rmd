@@ -1,0 +1,347 @@
+---
+title: "Factsheet Aanpak Noord"
+subtitle: "Buikslotermeer"
+author: "Onderzoek en Statistiek (O&S) | gemeente Amsterdam"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    includes:
+      in_header: assets/head.html
+    css: assets/style/os-style.css
+---
+
+```{r setup, include=FALSE}
+
+# Factsheet Buikslotermeer : Plan van Gool en De Kleine Wereld; aangevuld met Blauwe Zand (uit Tuindorp Buiksloot )
+library(knitr)
+library(tidyverse)
+library(patchwork)
+library(sf)
+
+opts_chunk$set(
+  fig.width=10,
+  dev = "svg",
+  echo = FALSE,
+  warning = FALSE,
+  out.extra = 'style="float:left;"', 
+  options(knitr.table.format = "html")
+  )
+
+plot_list_groot <- read_rds("03 tussentijds/plot_list_NH.rds")
+
+plot_list   <- plot_list_groot$plot_list
+bar_list    <- plot_list_groot$bar_list
+wijknaam    <- plot_list_groot$wijknaam
+kaart       <- plot_list_groot$kaart
+kaart_thema <- plot_list_groot$kaart_thema
+
+grDevices::windowsFonts("Amsterdam Sans" = grDevices::windowsFont("Amsterdam Sans"))
+
+font <- "Amsterdam Sans"
+
+```
+
+<div class="blue-background">
+In deze factsheet wordt de ontwikkeling besproken van de buurten De Kleine Wereld en Plan van Gool in de wijk Buikslotermeer in Amsterdam Noord op basis van indicatoren zoals die vastgesteld zijn in het beleidsprogramma *Aanpak Noord*. In dit programma wordt de aandacht gevestigd op specifieke buurten die op sociaal-economische dimensies achterlopen ten opzichte van de rest van stadsdeel Noord. Doelstellingen om de positie van deze buurten te versterken zijn gebundeld rondom zes thema's:
+
+Kansen voor jeugd: minder achterstanden en meer perspectief\
+Kansrijke sociale buurten: samen werken aan meer veerkracht\
+Wonen: opknappen en verduurzamen\
+Openbare ruimte: achterstanden wegwerken en kwaliteit verbeteren\
+Stadsnatuur en groen: Noord als natuurgebied\
+Buurteconomie: Behouden en versterken\ 
+
+In deze factsheet richten we ons zoveel mogelijk op het niveau van de buurt. Wanneer de data op dit niveau niet beschikbaar is, wordt de data gepresenteerd op wijkniveau.
+</div>
+
+#### Samenvatting
+Buikslotermeer bestaat uit de buurten Buikslotermeer-Noord, De Kleine Wereld, Buikslotermeerplein, Rode Kruisbuurt, Loenermark en Plan van Gool. Plan van Gool en de Kleine Wereld zijn de enige twee buurten in deze wijk die onderdeel zijn van het programma Aanpak Noord. Beide buurten ontwikkelen zich anders: In Plan van Gool neemt het inwoneraantal toe en in Kleine Wereld daalt het inwoneraantal. Daarnaast neemt het aandeel ouderen boven de 66 jaar juist toe in De Kleine Wereld. In de Kleine Wereld is het gemiddelde inkomen een stuk lager dan gemiddeld in Noord en is het aandeel inwoners dat tot de meest kwetsbare groep behoort zeer hoog. Het aandeel jongeren zonder startkwalificatie blijft hier ook hoog. In Plan van Gool zien we juist dat het aandeel zonder startkwalificatie daalt en dat het aandeel leerlingen dat het streefniveau taal haalt stijgt. De buurt en de verwachte buurtontwikkeling wordt in het algemeen beter beoordeeld in Plan van Gool dan in De Kleine Wereld. In Plan van gool voelen bewoners zich ook veiliger dan in De kleine Wereld.
+
+```{r kaart_noord, fig.cap = captext, fig.alt = captext}
+
+captext = "Stadsdeel Noord met Buikslotermeer (rood) en Aanpak Noord-buurten De Kleine Wereld en Plan van Gool (donkerblauw)"
+
+kaart
+
+```
+
+#### Demografische ontwikkeling: inwoners en huishoudens
+De bevolking is de afgelopen jaren sterk gegroeid in Noord tot bijna 109 duizend inwoners in 2024. In Plan van Gool is het inwoneraantal gestegen tot 3178 in 2024, maar in De Kleine Wereld is het aantal afgenomen tot 2644. Het aandeel kinderen tot 18 jaar is afgenomen in Noord en in beide Aanpak Noord-buurten, maar in beide buurten is dit aandeel nog wel boven het stedelijk gemiddelde en het gemiddelde van stadsdeel Noord. In de Kleine Wereld neemt het aandeel 66 plussers bovendien sterk toe.
+
+```{r fig_bevoling, fig.alt = captext, fig.height = 10}
+
+captext = "figuur met bevolkingsontwikkeling in Amsterdam, Stadsdeel Noord en Aanpak Noord buurten"
+
+plot_list$bevtotaal_groei/
+plot_list$bev0_18_p/
+plot_list$bev66plus_p
+
+```
+
+Net als elders in Noord verandert de huishoudsamenstelling in beide buurten gestaag. Maar in Plan van Gool blijft het aandeel huishoudens met kinderen min of meer stabiel, terwijl dit aandeel in Kleine Wereld daalt. Het aandeel eenoudergezinnen is in beide buurten een stuk hoger dan elders in Noord, maar er is wel sprake van een afname. 
+
+```{r fig_huish, fig.alt = captext, fig.height= 8}
+
+captext = 'ontwikkeling huishoudtypen in Noord en Aanak Noord-buurten'
+
+plot_list$bevhhmkind_p/
+plot_list$beveenouderhh_p
+
+```
+
+#### Waardering woning en woonomgeving
+
+Er zijn in Amsterdam en in stadsdeel Noord veel nieuwe woningen bijgebouwd. In 2024 telt de stad 480.735 woningen, waarvan er 51.438 in Noord staan. In de Kleine Wereld en in Plan van Gool is het aantal woningen niet veranderd.
+
+```{r woning_groei, fig.alt = captext, fig.height = 6 }
+
+captext = "ontwikkeling woingvoorraad"
+
+kaart_thema$wvoorrbag_groei
+
+```
+Het aandeel corporatiewoningen is hoog in De Kleine Wereld en iets boven het gemiddele percentage van Noord. Nieuwbouw en verkoop van corporatiewoningen trekken in Amsterdam (en in Noord) nieuwe groepen Amsterdammers aan die we nieuwe stedelingen noemen. Dit zijn Amsterdammers die na hun 18e in Amsterdam zijn komen wonen. In Noord is het aandeel van deze groep inwoners flink gestegen, maar in beide buurten is hun aandeel beperkt.
+
+```{r woonfiguur, fig.alt = captext, fig.height = 10 }
+
+captext = 'ontwikkeling woningvoorraad'
+
+  plot_list$wvoorrbag_groei/
+  plot_list$wcorhuur_p/
+  plot_list$bevnstedeling_p
+
+```
+
+In Amsterdam en in stadsdeel Noord zijn zijn veel woningen inmiddels verduurzaamd. Hierdoor is het aandeel woningen met een laag energielabel flink gedaald. Ook in De Kleine Wereld is een flinke inhaalslag gemaakt. In Plan van Gool was het aandeel met een laag energielabel al langere tijd laag.
+
+```{r,  fig.alt = captext, fig.height = 6}
+
+captext = 'kaart met aandeel woningen met een laag energielabel'
+
+kaart_thema$wlabelefg_p
+
+```
+
+De tevredenheid met de eigen (coroporatie)woning en de tevredenheid over het onderhoud van de corporatiewoning wordt in Plan van Gool iets beter beoordeeld dan in de Kleine Wereld.
+
+```{r woononderh, fig.alt = captext, fig.height = 10 }
+
+captext = 'tevredenheid met de woning en mate van duurzaamheid'
+
+plot_list$wlabelefg_p/
+plot_list$wwoning_r/
+plot_list$wonderhoudwoning_r
+
+```
+
+De mate van interactie en samenwerking tussen bewoners is in kaart gebracht door een sociale cohesie-maat die zijn oorsprong vindt in verschillende enquêtevragen uit de Veiligheidsmonitor. Hoe prettiger de omgang, hoe hoger het rapportcijfer voor de mate van sociale cohesie. De afgelopen jaren is dit rapportcijfer voor de stad, Noord en Buikslotermeer licht gestegen. Maar in de twee Aanpak Noord-buurten ligt dit rapportcijfer nog wel een stuk lager dan elders in de wijk. Vanwege een nieuwe onderzoeksmethodiek was het niet mogelijk om voor recente jaren de mate van sociale cohesie op buurtniveau te berekenen.
+
+```{r fig.alt = captext, fig.height = 8}
+
+fig.cap = 'sociale cohesie ne buurtbetrokkenheid'
+
+# toevoegen burgermonitor totaal noord?
+# Sociale cohesie tot 2023 gemeente, sd, wijk maar niet voor buurt (tot 2020): nagevraagd bij Anne: is inderdaad niet beschikbaar op buurtniv.
+
+plot_list$lsoccoh_r/
+plot_list$lbetrokken_r
+
+```
+
+Het gemiddelde rapportcijfer voor de ervaren tevredenheid met de eigen buurt is lager in de buurt De Kleine Wereld dan in Plan van Gool. Ook op andere tevredenheidsaspecten wordt Plan van Gool beter beoordeeld dan de Kleine Wereld zoals met de verwachte buurtontwikkeling en met het aanbod van buurthuizen of wijkcentra.
+
+```{r fig.alt = captext, fig.height = 6}
+
+fig.cap = "kaart met rapportcijfers per buurt"
+
+kaart_thema$lbuurt_r
+
+```
+
+```{r fig.alt = captext, fig.height = 12}
+
+
+fig.cap = 'tevredenheid buurt'
+
+plot_list$lbuurt_r/
+plot_list$lverwachtingbuurt_r/
+plot_list$wzbuurthuizen_r
+
+```
+
+Tussen 2019 en 2023 is het rapportcijfer voor het onderhoud van groen en van speelvoorzieningen gestegen in Buikslotermeer. Hiermee komen de cijfers boven die van de gemiddeldes van Noord uit. Het raportcijfers voor het onderhoud van straten en stoepen wordt wel minder dan gemiddeld in Noord beoordeeld. De waardering van het onderhoud is op alle drie de vlakken gestegen in De Kleine Wereld en Plan van Gool. Het gevoel van veiligheid is min of meer gelijk gebleven, maar ligt wel iets hoger in Plan van Gool dan in de Kleine Wereld. Beide rapportcijfers liggen onder het gemiddelde van Amsterdam-Noord.
+
+```{r fig.alt = captext, fig.height= 14}
+
+fig.cap = 'onderhoud publieke ruimte in Noord'
+
+plot_list$oronderhoudgroen_r/
+plot_list$oronderhoudspelen_r/
+plot_list$oronderhoudstraten_r/
+plot_list$vveiligavond_r
+```
+
+#### Stadsnatuur en Groen
+
+In stadsdeel Noord is het aandeel publiek groen (inclusief agrarisch groen, parken en natuurgebieden) een stuk hoger dan in de rest van de stad. In Buikslotermeer en daarbinnen in de buurten De Kleine Wereld en Plan van Gool is het aandeel wat lager. Door de hoge woondichtheid in beide buurten is het publiek groen per 1000 inwoners zeer laag.
+
+```{r fig.alt = captext, fig.height = 8}
+
+#Dit is eigenlijk best gek dat het percentage publiekelijk groen zomaar toeneemt: Nico vragen?
+
+captext = 'publiekelijk groen in Noord'
+
+bar_list$orpubgroen_p/
+bar_list$orpubgroen_inw
+
+```
+
+#### Besteedbaar inkomen en armoede
+
+Het gemiddeld besteedbaar inkomen ligt in Amsterdam op 48.700 euro in 2021; in Noord op 42.100 euro. In Plan van Gool is dit bedrag iets lager (37.200 euro). Het besteedbaar inkomen ligt nog wat lager in De Kleine Wereld (33.300 euro). In alle buurten is dit gemiddelde inkomen gestegen, maar de bedragen liggen nog steeds onder het gemiddeld besteedbaar inkomen van Noord. 
+
+Het aandeel inwoners met een laag inkomen en weinig vermogen is zowel in Noord als in Buikslotermeer als in de twee Aanpak Noord-buurten afgenomen. Maar dit aandeel blijft in de Kleine Wereld toch nog relatief hoog.
+
+```{r fig.alt = captext,  fig.height = 6}
+
+captext = 'inwoners met laag inkomen'
+
+kaart_thema$iminhh130_p
+
+```
+
+Het aandeel inwoners van 15 tot en met 65 jaar dat een bijstandsuitkering ontvangt, neemt af in Noord, maar is in Plan van Gool en De Kleine Wereld nog steeds een stuk hoger dan gemiddeld in Noord. Het aandeel jongeren uit minimahuishoudens is in beide buurten hoger dan elders in Noord. 
+
+```{r figink, fig.alt = captext,  fig.height = 12}
+
+captext = 'inkomensontwikkeling in stadsdeel Noord'
+
+plot_list$ihhink_gem/
+bar_list$iminhh130_p/
+plot_list$iwwb_p/
+bar_list$iminjong130_p
+
+```
+
+#### Ervaren gezondheid
+
+De twee Aanpak Noord-buurten in Buikslotermeer scoren op verschillende gezondheidsindicatoren lager dan gemiddeld in Noord, zoals het aandeel dat een goede tot zeer goede gezondheid ervaart lager. In de Kleine Wereld is dit aandeel het laagst. Bovendien neemt het aandeel dat zich gezond voelt in beide buurten (en in Noord en Amsterdam) af.
+
+```{r   fig.alt = captext, fig.height = 6}
+
+captext = "kaart met aandeel dat zich gezond voelt in buurt (%)"
+
+kaart_thema$wzgezond_p
+
+```
+
+Het aandeel met ernstige psychische klachten is in De Kleine Wereld en in Plan van Gool hoger dan gemiddeld in Noord. Bovendien stijgt het aandeel in beide buurten. Het aandeel inwoners met overgewicht is ook hoger in beide buurten, maar dit percentage is niet veranderd tussen 2020 en 2022.
+
+```{r fig.alt = captext, fig.height= 10}
+
+captext = 'diverse gezondheidsindicatoren in Noord'
+
+bar_list$wzgezond_p/   
+bar_list$wzdepr_p/
+bar_list$wzzwaar_p
+
+```
+
+#### Kansen voor de jeugd
+
+In stadsdeel Noord hebben veel kinderen een taalachterstand. Sinds 2018 neemt het aandeel leerlingen uit groep 8 dat het streefniveau taalt haalt in Plan van Gool toe. In De Kleine Wereld is sprake van een beperkte toename. In De Kleine Wereld is sprake van een toename van het aandeel jongeren zonder startkwalificatie, maar dit is niet het geval in Plan van Gool.
+
+```{r fig.alt = captext, fig.height = 10}
+
+captext = 'aandeel schoolverlaters zonder startkwalificatie'
+
+plot_list$ostrftaal_p/
+plot_list$ovveindi_p/
+plot_list$olsv_p
+
+```
+
+#### Werk en arbeidsmarkt
+
+```{r fig.alt = captext, fig.height = 10}
+
+# alleen Noord en Amsterdam ?
+# bar_list$werkopl_1866_hbowo_p/
+# bar_list$werkopl_1866_max_mbo1_p/
+# bar_list$werkopl_1866_mbo2_4_havovwo_p
+
+```
+
+De economische zelfstandigheid van vrouwen is toegenomen in Noord en Buikslotermeer. Het aandeel werkenden in loondienst met een flexibel dienstverband is licht gestegen in Noord en Buikslotermeer, maar ligt nog steeds relatief hoog in De Kleine Wereld en Plan van Gool.
+
+```{r figzelf, fig.alt = captext, fig.height = 8}
+
+captext = 'figuur economische zelfstandigheid vrouwen en aandeel beroepsbevolking zonder vast contract'
+
+bar_list$econzelfstvrw_p/
+plot_list$p_flex_ldienst_18_66
+
+```
+
+#### Kwetsbare groepen
+Het aantal kwetsbare groepen in een wijk of buurt wordt benaderd door na te gaan hoe hoog bewoners scoren op basis van een kwetsbaarheidsscore. De kwetsbaarheidsscore heeft een waarde tussen 0 en 4 en geeft aan op hoeveel hulpbronnen iemand kwetsbaar is (werk, opleiding, inkomen en/of gezondheid). Personen met een score van 3 of 4 worden tot de meest kwetsbaren gerekend. Zij scoren laag op minstens drie van de volgende hulpbronnen; een besteedbaar huishoudinkomen in de laagste 20%; hogere ziektekosten dan gemiddeld in Amsterdam; een laag opleidingsniveau.
+
+Het aandeel inwoners in de meest kwetsbare positie ligt fors hoger in De Kleine Wereld dan in Plan van Gool, waar het aandeel rond het gemiddelde van Noord schommelt. Dit verschil is ook zichtbaar bij de onderliggende leeftijdsgroepen. 
+
+```{r fig.alt = captext, fig.height = 6}
+
+captext = "aandeel kwetsbaren (%)"
+
+kaart_thema$skkwets34_p
+
+```
+
+```{r fig_kwetsbaar, fig.alt = captext,  fig.height = 10 }
+
+captext = 'figuur met kwetsbare groepen in Amsterdam en Noord'
+
+plot_list$skkwets34_p/
+plot_list$sk017_kwets34_p/
+plot_list$sk66plus_kwets34_p
+
+```
+
+#### Buurteconomie
+De Kleine Wereld en Plan van Gool zijn woonbuurten met weinig economische activiteiten
+Het aantal vestigingen is gegroeid in Noord. In 2023 zijn er 14.577 vestigingen. De toename van het aantal vestigingen (waaronder zzp-ers die op een woonadres staan ingeschreven) zien we ook terug in De Kleine Wereld en in Plan van Gool.
+
+```{r buurtec, fig.alt = captext, fig.height = 12}
+
+captext = 'figuur met ontwikkeling van vestigingen zzp-ers in Noord'
+
+plot_list$bhwp_1000inw/
+plot_list$bhvest_groei/
+plot_list$bhstart_p/
+plot_list$bhzzp_p
+
+```
+Het aanbod van winkels voor dagelijkse boodschappen wordt relatief goed beoordeeld door bewoners in de wijk Buikslotermeer wat niet verassend is vanwege de nabijheid van winkelcentrum Buikslotermeerplein. Het rapportcijfer is wel iets gedaald. Dit zien we ook in De Kleine Wereld. Het horecaanbod wwordt beter beoordeeld in Buikslotermeer dan in Noord gemiddeld. Vooral in Plan van Gool is de beoordeling hiervan sterk verbeterd.
+
+```{r buurtec2, fig.alt = captext, fig.height = 12}
+
+captext = 'figuur met rapportcijfers winkelaanbod en horecaaanbod in Noord'
+
+plot_list$bhwinkelaanbod_r/
+plot_list$bhhorecaaanbod_r/
+plot_list$bhlocoppleegstand_p/
+plot_list$bhlocvkpleegstand_p
+```
+
+Meer informatie over het programma Aanpak Noord is te vinden op de website [Aanpak Noord](https://www.amsterdam.nl/stadsdelen/noord/aanpak-noord/). Een overzicht van de geselecteerde indicatoren en van alle data op buurt-, wijk- en stadsdeelniveau is te vinden op de [website van Onderzoek en Statistiek](https://onderzoek.amsterdam.nl/dataset/focusgebieden)
+
+<div class="blue-background">
+#### Colofon
+Deze factsheet is geschreven door\
+Rogier van der Groep, Eva Karaçay en Idske de Jong\
+in opdracht van Stadsdeel Noord, Aanpak Noord\
+Gemeente Amsterdam juni 2024
+
+Onderzoek en Statistiek\
+onderzoek.amsterdam.nl\
+Gemeente Amsterdam
+</div>
