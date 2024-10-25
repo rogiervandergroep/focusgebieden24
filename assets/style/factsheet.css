@@ -1,16 +1,19 @@
 header {
   padding-top: 20px;
   padding-bottom: 20px;
+  position: relative;
 }
 
 @media screen and (max-width: 767px) {
   header {
     padding-bottom: 20px;
+    position: relative;
   }
 }
 
 header h1 {
   display: flex;
+  position: relative;
   grid-template-columns: repeat(4, 1fr);
   font-size: clamp(1.5rem, 1.5rem + (1 * (100vw - 20rem)) / 100, 2.5rem);
   line-height: clamp(2rem, 2rem + (1 * (100vw - 20rem)) / 100, 3rem);
@@ -27,12 +30,20 @@ header h1 * {
 	color: black;
 }
 
-header img.small {
+header img.svg {
+  position: relative;
   height: 100px;
   margin-right: 40px;
   display: flex;
 }
 
+
+.header-svg {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
 
 .blue-background {
   background-color: #004699 !important;

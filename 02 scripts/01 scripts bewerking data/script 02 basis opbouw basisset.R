@@ -8,34 +8,14 @@ library(openxlsx)
 
 source("http://gitlab.com/os-amsterdam/tools-onderzoek-en-statistiek/-/raw/main/R/load_all.R")
 
-# ### uit de referentiedatabase zonder geo ---
-# bbga_data<- dbGetQuery(
-#   conn = os_db_con(
-#     db_name = 'refdb_az',
-#     path = pad_thuis_nieuw),
-#   statement = "
-#   SELECT jaar, gebiedcode_15, waarde, indicator_definitie_id
-#   FROM public.bbga_kerncijfers
-#   WHERE jaar BETWEEN 2014 AND 2024;
-#   ")
-# 
-# ### metadata uit de referentiedatabase zonder geo ---
-# bbga_meta<- dbGetQuery(
-#   conn = os_db_con(
-#     db_name = 'refdb_az',
-#     path = pad_thuis_nieuw),
-#   statement = "
-#   SELECT variabele, thema, label, label_kort, definitie
-#   FROM public.bbga_indicatoren_definities
-#   WHERE variabele IN ('BEVTOTAAL', 'BHWP', 'BHVEST', 'WVOORRBAG', 'WDICHT');
-#   ")
-
 ## stap 1. inlezen BBGA ---
 
 #pad <- "G:/OIS/Basisbestanden/basisstatistiekbestand/NU op de OIS-site/onderzoek.amsterdam.nl/"
 
+pad <- "../OS 24 BBGA UPDATE 10 2024/data/04 0 publicatie BBGA bestanden/DEF okt 24"
 
-BBGA_data <- read.csv2("00 ruwe data/bbga_latest_and_greatest.csv") |>
+# inlezen BBGA
+BBGA_data <- read.csv2(glue::glue("{pad}/bbga_latest_and_greatest.csv")) |>
   janitor::clean_names()|>
   mutate(variabele = str_to_lower(variabele)) |>
   rename(
@@ -46,7 +26,8 @@ BBGA_data <- read.csv2("00 ruwe data/bbga_latest_and_greatest.csv") |>
     spatial_date = '20220324') |>
   mutate(spatial_code = replace_na(spatial_code , "NA"))
 
-BBGA_meta <- read.csv("00 ruwe data/metadata_latest_and_greatest.csv")|>
+# inlezen META data
+BBGA_meta <- read.csv(glue::glue("{pad}/metadata_latest_and_greatest.csv"))|>
   janitor::clean_names()|>
   mutate(variabele = str_to_lower(variabele))|>
   select(variabele, thema, label) |>
@@ -55,18 +36,23 @@ BBGA_meta <- read.csv("00 ruwe data/metadata_latest_and_greatest.csv")|>
 
 ### stap 2 inlezen indicatoren ---
 
+# inlezen basislijst met indicatoren
 tabel_ind <- read.xlsx("01 indicatoren/Totaaloverzicht focusgebieden Amsterdam INPUT.xlsx") |>
   janitor::clean_names()|>
   mutate(variabele = str_to_lower(variabele))
 
-# selecteer indicatoren die in BBGA staan
+# selecteer indicatoren uit basislijst die ook in BBGA staan
 tabel_ind_bbga <- tabel_ind |>
   filter(bbga == TRUE)
 
 ### stap 3 koppelen BBGA-indicatoren aan BBGA-data ---
 
 BBGA_data_def <- BBGA_data |>
+  
+  # koppel basislijst (input) aan lijst met alle BBGA-indicatoren
   left_join(tabel_ind_bbga, by = "variabele")|>
+  
+  # verwijder de BBGA indicatoren die niet in basislijst (input) staan 
   filter(aanpak_noord == TRUE | mpzo == TRUE | nplv == TRUE | basis == TRUE | samen_nw == TRUE)
 
 
@@ -76,13 +62,17 @@ BBGA_data_def <- BBGA_data |>
 data_wel_bbga <- BBGA_data_def |>
   left_join(BBGA_meta, "variabele")|>
   mutate(temporal_date = as.character(temporal_date)) |>
-  add_column(tweedeling_def= 'totaal')
+  add_column(tweedeling_def = 'totaal')
 
 ### stap 5 toevoegen data die niet in BBGA staat ---
 
 # van sommige vars staat het totaal in BBGA en de tweedeling in de map 'niet-bbga'
 # gezondheidsindicatoren zijn handmatig voor wijken en buurten aangevuld
-uitzondering <- c("sruit4_p", "pinzetbrt_p", "pinform_p", "wzbeweeg_p", "wzdepr_p" , "wzzwaar_p", "wzgezond_p")
+# nb wordt niet meer aangevuld door GGD !!!
+# veiligheidsindexcijfers staan in BBGA maar niet op stadsdeelniveau
+
+uitzondering <- c("sruit4_p", "pinzetbrt_p", "pinform_p", "wzbeweeg_p", "wzdepr_p" , "wzzwaar_p", "wzgezond_p",
+                  "v_onvbeleving_i","v_personovl_i","v_vermijd_i","v_verloed_i","v_slacht_i","v_gercrim_i")
 
 
 
@@ -90,8 +80,8 @@ uitzondering <- c("sruit4_p", "pinzetbrt_p", "pinform_p", "wzbeweeg_p", "wzdepr_
 tabel_ind_niet_bbga <- tabel_ind |>
   filter(bbga == FALSE | variabele %in% uitzondering)
 
+# inlezen data die niet in BBGA staat
 temp <- list.files("00 ruwe data/niet in bbga",full.names = T)
-
 
 my_mutate <- function(x){
   
@@ -106,7 +96,6 @@ my_mutate <- function(x){
     mutate(
       variabele = str_to_lower(variabele))
 }
-
 
 data_niet_bbga <- temp |>
   map(\(x) read.xlsx(x))|>
@@ -143,23 +132,24 @@ data_def <- bind_rows(data_niet_bbga, data_wel_bbga) |>
   left_join(
     geo_df, by ="spatial_code") |>
   
+  #NB: thema_zuidoost_label (nieuwe indeling) vervangt thema_zuidoost (oude indeling)
   select(
-    "ambitie_zuidoost","thema_noord","indicator_sd","thema_bbga","label_bbga" ,  
+    "thema_zuidoost_label",  "thema_zuidoost_nulmeting", "thema_noord", "samen_nw", "indicator_sd","thema_bbga","label_bbga" ,  
     "spatial_code","spatial_name","spatial_type","spatial_date",
     "temporal_date", "variabele" ,"value" ,  
     "mpzo","aanpak_noord","nplv","bbga",everything())|>
   
-  # alleen jaartal meenenem
+  # alleen jaartal meenemen
   mutate(
     temporal_date = str_sub(temporal_date, 1, 4),
-    value=as.numeric(value))|>
+    value=as.numeric(value)) |>
   
   filter(
     !is.na(spatial_name),
     temporal_date %in% c(2017:2024))
 
 ### in dit script worden specieke berekeningen gedaan ---
-source("02 scripts/01 scripts bewerking data/script 00 basis extra berekeningen.R")
+source("02 scripts/01 scripts bewerking data/script 01 basis extra berekeningen.R")
 
 # extra komt uit script 'extra berekeningen'
 data_def2 <- bind_rows(data_def, extra) |>
@@ -167,7 +157,7 @@ data_def2 <- bind_rows(data_def, extra) |>
   mutate(
     spatial_type = factor(
       spatial_type, 
-      levels = c("buurten", 'wijken', 'gebieden', 'stadsdelen', 'gemeente')),
+      levels = c("winkelgebieden", "buurten", 'wijken', 'gebieden', 'stadsdelen', 'gemeente')),
     
     tweedeling_def = factor(
       tweedeling_def, levels = c("zittende bewoner", "nieuwe bewoner", "totaal"))
@@ -183,7 +173,7 @@ data_def2 <- bind_rows(data_def, extra) |>
     besch_aggr_niveaus = paste(unique(spatial_type),   collapse = "|"))
 
 range <- data_def2 |>
-  select(variabele,besch_jaren, starts_with("besch_")) |>
+  select(variabele, starts_with("besch_")) |>
   distinct(variabele, .keep_all = T) 
 
 tabel_ind_def <- tabel_ind |>
@@ -220,13 +210,63 @@ tabel_ind_def <- tabel_ind_def |>
   
   mutate(ind_onderdeel_van = factor(ind_onderdeel_van, levels = onderdeel_van_levels))
 
-
+tabelvoorupdates<- tabel_ind_def|>
+  select(indicator_sd, variabele, bron, bbga, starts_with("besch"))
 
 write.xlsx(tabel_ind_def,  "01 indicatoren/Totaaloverzicht focusgebieden Amsterdam DEF.xlsx", withFilter=T, overwrite = T, widths = 30)
+write.xlsx(tabelvoorupdates,  "overzicht inidcatoren tbv data_uitvraag.xlsx", withFilter=T, overwrite = T)
+
 
 tabel_ind_def_sel <- tabel_ind_def |>
-  select(indicator_sd,ind_onderdeel_van,ambitie_zuidoost,thema_noord,thema_nw,besch_jaren,besch_tweedeling,besch_aggr_niveaus )|>
+  select(indicator_sd,ind_onderdeel_van, thema_zuidoost_label,thema_noord,thema_nw_label,besch_jaren,besch_tweedeling,besch_aggr_niveaus )|>
   arrange(ind_onderdeel_van)
+
+tabel_okt_24 <- list(
+  
+  tab_mazo = tabel_ind_def_sel |>
+    filter(!is.na(thema_zuidoost_label))|>
+    select(indicator_sd, thema_zuidoost_label, besch_jaren,besch_aggr_niveaus),
+  
+  tab_snw = tabel_ind_def_sel |>
+    filter(!is.na(thema_nw_label))|>
+    select(indicator_sd, thema_nw_label, besch_jaren,besch_aggr_niveaus),
+  
+  tab_noord = tabel_ind_def_sel |>
+    filter(!is.na(thema_noord))|>
+    select(indicator_sd, thema_noord, besch_jaren,besch_aggr_niveaus)
+  
+)
+
+
+# Define a style with blue background for the header row
+header_style <- createStyle(
+  fontColour = "#FFFFFF",      
+  fgFill = "#004699",
+  textDecoration = "bold",
+  fontSize = 11
+)
+
+
+
+## Create a new workbook
+wb <- createWorkbook()
+
+# Loop through the list and add each element to a new sheet
+for (i in seq_along(tabel_okt_24)) {
+  
+  sheet_name <- names(tabel_okt_24)[i]  
+  
+  addWorksheet(wb, sheet_name)   
+  
+  writeData(wb, sheet_name, tabel_okt_24[[i]], headerStyle = header_style, withFilter = T) 
+  setColWidths(wb, sheet_name, cols = c(1,2,3,4), widths = c(50, 40, 40, 40))
+  
+}
+
+
+## Save workbook
+saveWorkbook(wb, "01 indicatoren/totaaloverzicht indicatoren focusgebieden okt 24.xlsx", overwrite = TRUE)
+
 
 ## Create a new workbook
 wb <- createWorkbook()
@@ -239,4 +279,13 @@ setColWidths(wb, 1, cols = c(1,2,3,4,5, 6,7,8), widths = c(50, 40, 30, 30, 30, 4
 
 ## Save workbook
 saveWorkbook(wb, "01 indicatoren/totaaloverzicht indicatoren focusgebieden website.xlsx", overwrite = TRUE)
+
+
+
+
+
+
+
+
+
 

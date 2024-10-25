@@ -86,11 +86,11 @@ data_noord_met_buurt_3min<- data_noord |>
 loop_var_noord3p   <- unique(data_noord_met_buurt_3plus$variabele)
 loop_var_noord3m   <- unique(data_noord_met_buurt_3min$variabele)      
 
-source("02 scripts/01 scripts bewerking data/script 21 publicatie data Noord functies.R")
+source("02 scripts/01 scripts bewerking data/03 scripts publicaties Noord/script 20 publicatie Noord functies.R")
 
-###########################################
-#### dit is een functie om plots te maken---
-############################################
+#########################################################
+#### dit is een functie om plots te maken en te saven ---
+#########################################################
 
 my_rdata_plot<- function(wc) {
   

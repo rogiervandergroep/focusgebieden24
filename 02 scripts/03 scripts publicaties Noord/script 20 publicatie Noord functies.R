@@ -1,6 +1,6 @@
 
 
-#source("http://gitlab.com/os-amsterdam/tools-onderzoek-en-statistiek/-/raw/main/R/load_all.R")
+source("http://gitlab.com/os-amsterdam/tools-onderzoek-en-statistiek/-/raw/main/R/load_all.R")
 
 grDevices::windowsFonts("Amsterdam Sans" = grDevices::windowsFont("Amsterdam Sans"))
 #grDevices::windowsFonts("Corbel" = grDevices::windowsFont("Corbel"))
@@ -41,6 +41,11 @@ theme_os2 <- function(orientation="horizontal", legend_position = "bottom"){
   }
   
 }
+
+##############################
+### scripts wijk factsheet ---
+##############################
+
 
 # script lijnfiguur Noord (geschikt voor data met meerdere jaren )
 my_line_plot<- function(x, var, wijkcode){
@@ -126,8 +131,6 @@ my_bar_plot<- function(x, var, wijkcode){
 
 # NM01 (Blauwe Zand) wordt toegevoegd aan NH (Tuindorp Buiksloot)
 
-
-
 ### illustratieve kaartjes ---
 my_plot<- function(wc){
   
@@ -187,9 +190,6 @@ my_plot<- function(wc){
   
   return(plot)
 }
-
-
-
 
 ### kaartjes met data ---
 my_plot_ind <- function(x, var_sel, wc){
@@ -277,3 +277,164 @@ my_plot_ind <- function(x, var_sel, wc){
   
   return(plot)
 }
+
+
+##################################
+### scripts algemene factsheet noord ---
+##################################
+
+
+# staafdiagram voor laatste jaar, voor de aanpak noord buurten
+my_bar_plot_alg<- function(x, var, jaar_var){
+  
+  driekleur <- c("#ec0000", "#004699", "#00a03c")
+  
+  #position = position_nudge(x = - 0.5), 
+  
+  jaar_plot <-   x|>
+    ungroup()|>
+    filter(temporal_date == max(temporal_date) )|>
+    filter(variabele %in% var)|>
+    select(temporal_date)|>
+    distinct()|>
+    pull()
+  
+  x|>
+    filter(
+      temporal_date %in% c(max(temporal_date), jaar_var),
+      variabele %in% var)|>
+    
+
+    ggplot(aes(
+      x = value, 
+      y = fct_relevel(fct_reorder (spatial_name, value), "Amsterdam",  "Noord"), 
+      label = round(value,1))) +
+    
+    geom_col(fill = driekleur[2]) +
+    
+    geom_text(family = font, position = position_stack(vjust = 0.8), color = 'white')+
+    labs(y=NULL, y = NULL, x = glue::glue("jaartal {jaar_plot}")) +
+    theme_os2(orientation="horizontal")
+}
+
+### kaartjes met data ---
+my_plot_ind_alg<- function(x, var_sel, jaar_var ){
+  
+  y <- x |>
+    filter(
+      variabele %in% var_sel,
+      temporal_date %in% c(max(temporal_date), jaar_var)
+      )|>
+    mutate(
+      value_kl         = gtools::quantcut(value, na.rm = T),
+      value_kl_labels  = gtools::quantcut(value, na.rm = T, labels = c("veel lager", "lager", "hoger", "veel hoger"))
+    )
+  
+  aanpak_noord_buurten <- read.xlsx(
+    "01 indicatoren/tabel_aanpak_noord_buurten.xlsx")|>
+    select(spatial_code, aanpak_noord_buurt)
+  
+  # alle buurten
+  kaart_buurten <- os_get_geom("buurten")|>
+    filter(stadsdeelCode == 'N')|>
+    left_join(aanpak_noord_buurten, by = c("code"="spatial_code"))|>
+    filter(aanpak_noord_buurt == TRUE) |>
+    left_join(y,  by = c("code"="spatial_code")
+    )
+  
+  # alle wijken 
+  kaart_wijken <- os_get_geom("wijken")|>
+    filter(stadsdeelCode == 'N')
+  
+  grDevices::windowsFonts("Amsterdam Sans" = grDevices::windowsFont("Amsterdam Sans"))
+  
+  font <- "Amsterdam Sans"
+  
+  # plot
+  plot<-ggplot()+
+    
+    geom_sf(data = kaart_wijken, fill = "grey" , color = "white", linewidth = 0.7)+
+    
+    geom_sf(data = kaart_buurten, aes(fill = value_kl_labels) , color = "white", linewidth = 0.7)+
+    
+    geom_sf_text(data = kaart_buurten, aes(label = round(value,1)) , family = font, check_overlap = F)+
+    
+    theme_os()+
+    labs(title = NULL,  x = NULL, y = NULL) +
+    scale_fill_manual(values  = blauw_pal[c(9,7,5,3,1)]) +
+    guides(fill = guide_legend( reverse = F, nrow = 1))+
+    theme(
+      plot.subtitle = element_text(family = font, size = 12),
+      legend.text = element_text(family = font, size = 12),
+      plot.title = element_text(family = font, lineheight = 1.2, size = 14),
+      axis.line = element_blank(), 
+      axis.text = element_blank(), 
+      axis.ticks = element_blank(), 
+      axis.title = element_blank(), 
+      panel.background = element_blank(), 
+      panel.grid = element_blank(), 
+      panel.spacing = unit(0, "lines"), 
+      plot.background = element_blank()
+    )
+  
+  return(plot)
+}
+
+
+### kaartjes met tekstlabel ---
+
+# aanpak noord buurten
+aanpak_noord_buurten <- read.xlsx(
+    "01 indicatoren/tabel_aanpak_noord_buurten.xlsx")|>
+    select(spatial_code, aanpak_noord_buurt)
+  
+# alle buurten
+kaart_buurten <- os_get_geom("buurten")|>
+  filter(stadsdeelCode == 'N')|>
+  left_join(aanpak_noord_buurten, by = c("code"="spatial_code"))|>
+  filter(aanpak_noord_buurt == TRUE)
+  
+# alle wijken 
+kaart_wijken <- os_get_geom("wijken")|>
+  filter(stadsdeelCode == 'N')
+  
+grDevices::windowsFonts("Amsterdam Sans" = grDevices::windowsFont("Amsterdam Sans"))
+  
+font <- "Amsterdam Sans"
+  
+blauw <- c("#004699", "#959dcc", "#b8b8b8")
+
+
+  
+  # plot
+ggplot()+
+    
+    geom_sf(data = kaart_wijken, fill = blauw[3] , color = "white", linewidth = 0.7)+
+    
+    geom_sf(data = kaart_buurten, fill = blauw[1], color = "white", linewidth = 0.7)+
+    
+    geom_sf_text(data = kaart_buurten, aes(label = code) , color = "white", family = font, check_overlap = F)+
+    
+    theme_os()+
+    labs(title = NULL,  x = NULL, y = NULL) +
+    guides(fill = guide_legend( reverse = F, nrow = 1))+
+    theme(
+      plot.subtitle = element_text(family = font, size = 12),
+      legend.text = element_text(family = font, size = 12),
+      plot.title = element_text(family = font, lineheight = 1.2, size = 14),
+      axis.line = element_blank(), 
+      axis.text = element_blank(), 
+      axis.ticks = element_blank(), 
+      axis.title = element_blank(), 
+      panel.background = element_blank(), 
+      panel.grid = element_blank(), 
+      panel.spacing = unit(0, "lines"), 
+      plot.background = element_blank()
+    )
+ggsave("20 figuren rapport noord/fig_kaart_buurtnamen.svg", width = 10, height = 5)    
+
+
+
+
+
+

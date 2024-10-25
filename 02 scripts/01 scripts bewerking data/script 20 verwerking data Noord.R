@@ -7,7 +7,7 @@ source("02 scripts/01 scripts bewerking data/script 02 basis opbouw basisset.R")
 
 # toevoegen lijst met aanpak noord buurten
 
-aanpak_noord_buurten <- read.xlsx("../data/01 indicatoren/tabel_aanpak_noord_buurten.xlsx")|>
+aanpak_noord_buurten <- read.xlsx("01 indicatoren/tabel_aanpak_noord_buurten.xlsx")|>
   select(spatial_code, aanpak_noord_buurt)
 
 BBGA_data_noord_wide <- data_def2 |>
@@ -17,8 +17,8 @@ BBGA_data_noord_wide <- data_def2 |>
     aanpak_noord == TRUE | basis == TRUE) |>
   
   select(
-    -c("ambitie_zuidoost", "thema_bbga", "label_bbga", "mpzo", "nplv", "spatial_date", "samen_nw", 
-       'bbga',  "bronhouder", "opmerking", "thema_nw" , "aanpak_noord", "bron",  "basis", "besch_jaren", "besch_tweedeling", "besch_aggr_niveaus")
+    "thema_noord", "indicator_sd", "variabele", "temporal_date", "value", "kernindicator_noord", 
+    "spatial_code", "spatial_name", "aanpak_noord", "spatial_type", "tweedeling_def"
   )|>
   
   left_join(aanpak_noord_buurten, by='spatial_code')|>
@@ -43,6 +43,8 @@ BBGA_data_noord_wide <- data_def2 |>
   arrange(variabele)
 
 
+
+# to do: gebieden en winkelgebieden in Noord
 BBGA_data_noord_long <- data_def2 |>
   
   filter(  
@@ -50,9 +52,8 @@ BBGA_data_noord_long <- data_def2 |>
     aanpak_noord == TRUE | basis == TRUE)|>
   
   select(
-    -c("ambitie_zuidoost", "thema_bbga", "label_bbga", "mpzo", "nplv", "spatial_date",
-       'bbga',  "bronhouder", "opmerking", "thema_nw", "samen_nw",
-       "aanpak_noord")
+    "thema_noord", "indicator_sd", "variabele", "temporal_date", "value", "kernindicator_noord", 
+    "spatial_code", "spatial_name", "aanpak_noord", "spatial_type", "tweedeling_def"
   )|>
   
   left_join(

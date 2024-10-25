@@ -80,8 +80,52 @@ extra  <- bind_rows(
      value = value/first(value)*100)|>
    select(-variabele)|>
    add_column(variabele = 'wvoorrbag_groei')|>
-   left_join(tabel_ind, by="variabele")
+   left_join(tabel_ind, by="variabele"),
   
+
+ # starters gedeeld door opheffingen index  NB: nieuwe variabele: werkt pas na BBGA update
+ data_def|>
+   filter(
+     variabele %in% c('bhstart_tot', 'bhophef_tot'))|>
+   select(spatial_code:value)|>
+   pivot_wider(
+     values_from = value,
+     names_from = variabele)|>
+   mutate(
+     value = (bhstart_tot/bhophef_tot)*1000)|>
+   add_column(variabele = 'bhstart_oph')|>
+   left_join(tabel_ind, by="variabele")  |>
+   select(-(c("bhstart_tot", "bhophef_tot"))),
+ 
+ # berekening aandeel STARTERS
+ data_def|>
+   filter(
+     variabele %in% c('bhstart_tot', 'bhvest'))|>
+   select(spatial_code:value)|>
+   pivot_wider(
+     values_from = value,
+     names_from = variabele)|>
+   mutate(
+     value = (bhstart_tot/bhvest)*100)|>
+   add_column(variabele = 'bhstart_tot_p')|>
+   left_join(tabel_ind, by="variabele")  |>
+   select(-(c("bhstart_tot", "bhvest"))),
+ 
+
+ 
+ # berekening aandeel werkzame personen in CI 
+ data_def|>
+   filter(
+     variabele %in% c('bhwp_ci', 'bhwp'))|>
+   select(spatial_code:value)|>
+   pivot_wider(
+     values_from = value,
+     names_from = variabele)|>
+   mutate(
+     value = (bhwp_ci/bhwp)*100)|>
+   add_column(variabele = 'bhwp_ci_p')|>
+   left_join(tabel_ind, by="variabele")  |>
+   select(-(c("bhwp_ci", "bhwp")))
   
   
   
