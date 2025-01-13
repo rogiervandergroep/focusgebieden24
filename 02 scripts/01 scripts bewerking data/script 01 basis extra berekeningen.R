@@ -3,15 +3,16 @@
 ### extra berekeningen ---
 ##########################
 
+var_sel<- c("spatial_code", "spatial_name", "spatial_type", "temporal_date", "variabele", "value")
+
 extra  <- bind_rows(
   
   # berekening boomkronen oppervlakte
   data_def|>
-    
     filter(
       variabele %in% c('orland', 'opp_boomkroon_publiek_ha'),
       temporal_date == '2023')|>
-    select(spatial_code:value)|>
+    select(all_of(var_sel))|>
     pivot_wider(
       values_from = value, 
       names_from = variabele)|>
@@ -26,7 +27,7 @@ extra  <- bind_rows(
   data_def|>
     filter(
       variabele %in% c('bhvest'))|>
-    select(spatial_code:value)|>
+    select(all_of(var_sel))|>
     group_by(
       spatial_code, spatial_name)|>
     arrange(temporal_date )|>
@@ -39,11 +40,10 @@ extra  <- bind_rows(
 
   # berekening publiekelijk groen per 1000 inwoners
   data_def|>
-    
     filter(
       variabele %in% c('orpubgroen', 'bevtotaal'),
       temporal_date == '2023')|>
-    select(spatial_code:value)|>
+    select(all_of(var_sel))|>
     pivot_wider(
       values_from = value, 
       names_from = variabele)|>
@@ -53,11 +53,11 @@ extra  <- bind_rows(
     left_join(tabel_ind, by="variabele")  |>
     select(-(c("orpubgroen", "bevtotaal"))),
   
-  # bevolkingsgroei
+ # bevolkingsgroei
  data_def|>
     filter(
       variabele %in% c('bevtotaal'))|>
-    select(spatial_code:value)|>
+    select(all_of(var_sel))|>
     group_by(
       spatial_code, spatial_name)|>
    arrange(temporal_date )|>
@@ -67,12 +67,11 @@ extra  <- bind_rows(
     add_column(variabele = 'bevtotaal_groei')|>
     left_join(tabel_ind, by="variabele"),
  
- 
  # woningvoorraadontwikkeling
  data_def|>
    filter(
      variabele %in% c('wvoorrbag'))|>
-   select(spatial_code:value)|>
+   select(all_of(var_sel))|>
    group_by(
      spatial_code, spatial_name)|>
    arrange(temporal_date )|>
@@ -82,17 +81,17 @@ extra  <- bind_rows(
    add_column(variabele = 'wvoorrbag_groei')|>
    left_join(tabel_ind, by="variabele"),
   
-
- # starters gedeeld door opheffingen index  NB: nieuwe variabele: werkt pas na BBGA update
+ # aandeel starters gedeeld door aandeel opheffingen   NB: nieuwe variabele: werkt pas na BBGA update
  data_def|>
    filter(
-     variabele %in% c('bhstart_tot', 'bhophef_tot'))|>
-   select(spatial_code:value)|>
+     variabele %in% c('bhstart_tot', 'bhophef_tot', 'bhvest'))|>
+   select(all_of(var_sel))|>
    pivot_wider(
      values_from = value,
      names_from = variabele)|>
    mutate(
-     value = (bhstart_tot/bhophef_tot)*1000)|>
+     value = ((bhstart_tot/bhvest)/(bhophef_tot/bhvest))
+     )|>
    add_column(variabele = 'bhstart_oph')|>
    left_join(tabel_ind, by="variabele")  |>
    select(-(c("bhstart_tot", "bhophef_tot"))),
@@ -101,7 +100,7 @@ extra  <- bind_rows(
  data_def|>
    filter(
      variabele %in% c('bhstart_tot', 'bhvest'))|>
-   select(spatial_code:value)|>
+   select(all_of(var_sel))|>
    pivot_wider(
      values_from = value,
      names_from = variabele)|>
@@ -111,13 +110,26 @@ extra  <- bind_rows(
    left_join(tabel_ind, by="variabele")  |>
    select(-(c("bhstart_tot", "bhvest"))),
  
-
+  # berekening aandeel zonder startkwalificatie
+ data_def|>
+   filter(
+     variabele %in% c('startkwalificatie_p'),
+     tweedeling_def=='totaal')|>
+   select(all_of(var_sel))|>
+   pivot_wider(
+     values_from = value,
+     names_from = variabele)|>
+   mutate(
+     value = (100-startkwalificatie_p))|>
+   add_column(variabele = 'startkwal_zonder_p')|>
+   left_join(tabel_ind, by="variabele")  |>
+   select(-(c("startkwalificatie_p"))),
  
  # berekening aandeel werkzame personen in CI 
  data_def|>
    filter(
      variabele %in% c('bhwp_ci', 'bhwp'))|>
-   select(spatial_code:value)|>
+   select(all_of(var_sel))|>
    pivot_wider(
      values_from = value,
      names_from = variabele)|>
@@ -127,8 +139,6 @@ extra  <- bind_rows(
    left_join(tabel_ind, by="variabele")  |>
    select(-(c("bhwp_ci", "bhwp")))
   
-  
-  
-)  |>
+  )  |>
   add_column(tweedeling_def= 'totaal')
 

@@ -3,6 +3,10 @@
 
 # met dit script wordt de data ingelezen en worden functies aangemaakt voor de plots
 source("02 scripts/04 scripts publicaties Nieuw-West/script 22 publicatie NW factsheets algemeen data.R")
+source("02 scripts/04 scripts publicaties Nieuw-West/script 20 publicatie NW functies.R")
+
+
+data_nw_def <- data_nw_ruw
 
 # FA           Sloterdijk Nieuw-West
 # FB FC FD FE  Geuzenveld Slotermeer
@@ -19,98 +23,166 @@ geb_levels <- c(
 
 
 
-### kaarten demografie
 
-# bar ontwikkeling bevolking en woningvoorraad
-data_nw_def |>
+
+### eigenaarschap ---
+
+# discriminatie: ldiscri_p
+# invloed op de stad:  binvloed_p (alleen beschikbaar op SD-niveau)
+
+hoog = 4
+breed = 12
+# invloed: alleen op gebiedsniveau voor 2019
+data_nw_def |> 
   filter(
-    spatial_code != 'FA',
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-    my_bar_plot( 
-      var =  c("bevtotaal_groei", "wvoorrbag_groei"), 
-      facet_var = indicator_sd)
+    spatial_type %in% c( 'stadsdelen', 'gemeente'))|>
+  my_bar_plot(
+    var = c("binvloed_p"),
+    jaar = NULL, 
+    facet_var = tweedeling_def)
 
 
-# gestapelde staaf bevolking
-data_nw_def |>
+hoog = 4
+breed = 12
+# discriminatie (data uit veiligheidsmonitor)
+data_nw_def |> 
   filter(
-  spatial_type %in% c('gebieden'))|>
-  my_stack_plot("bevtotaal")
+    spatial_code != 'GF06',
+    tweedeling_def == 'totaal',
+    spatial_type %in% c('gebieden','stadsdelen','gemeente'))|>
+  my_bar_plot(
+    var = c("ldiscri_p"), 
+    jaar = c("2020"), 
+    facet_var = temporal_date)
 
-# kaart bevolking
+
+hoog  = 6
+breed = 12
 data_nw_def |>
-  my_kaart_plot(c("bevtotaal"), "wijken", c("2019", "2021"), temporal_date)
+  my_kaart_plot( 
+    var = c("ldiscri_p"),
+    geo = "wijken",
+    afr = 0,
+    jaar = c("2020"), 
+    facet_var = temporal_date)
 
-# kaart kinderen en 65_plus
-data_nw_def |>
-  my_kaart_plot(c("bevhhmkind_p", "bev66plus_p"), "buurten", NULL, facet_var = indicator_sd)
+
+### Veiligehid ---
+
+# zwerfafval grof (%) 
+# voelt zich wel eens onveilig in eigen buurt (%) 
+# geregistreerde criminatiliteitsindex 
+# onveiligheidsbelevingsindex 
+# gerapporteerd slachtofferschapindex 
+# vermijdingsindex (onderdeel veiligheidsindex) 
 
 
-# bar corporatiehuur
-data_nw_def |>
+# zwerfvuil : nu alleen op gebiedsniveau: merijn gaat data leveren op wijkniveau
+hoog = 4
+data_nw_def |> 
   filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("wcorhuur_p"), c("2019", "2021"), temporal_date)
+    spatial_type %in% c('gebieden',  'stadsdelen', 'gemeente'))|>
+  my_bar_plot(c("or_grof_p"), c("2020"), temporal_date)
+
+hoog = 6
+breed = 12
+data_nw_def |>
+  mutate(indicator_sd = case_when(
+    variabele == "vveiligavond_r"  ~ "veiligheidsgevoel avond (1-10)",
+    variabele == "vveiligvoelen_p" ~ "onveilig in buurt (%)")
+    )|>
+  my_kaart_plot( 
+    var = c("vveiligavond_r","vveiligvoelen_p" ),
+    geo = "wijken",
+    afr = 1,
+    jaar =  NULL,
+    facet_var = indicator_sd)
+
+
+data_nw_def |>
+  mutate(indicator_sd = case_when(
+    variabele == "v_vermijd_i"     ~ "vermijding (index)",
+    variabele == "v_onvbeleving_i" ~ "onveiligeidsbeleving (index)")
+  )|>
+  my_kaart_plot( 
+    var = c("v_onvbeleving_i", "v_vermijd_i"),
+    geo = "wijken",
+    afr = 1,
+    jaar =  NULL,
+    facet_var = indicator_sd)
+
+
+
+
+breed = 12
+data_nw_def |>
+  my_kaart_plot( 
+    var = c("v_gercrim_i", "v_slacht_i"),
+    geo = "wijken",
+    afr = 1,
+    jaar =  NULL,
+    facet_var = indicator_sd)
+
+
+
+
+
+
+
 
 ### GRIJS: Woning en woonomgevin
 
-# sociale cohesie (schaal obv 4 items) 	lsoccoh_r
-# verbondheid met de buurt (%)	        lverbondenbuurt_p
-# tevredenheid met eigen woning (1-10)	wwoning_r
-# mening te geven over ontwikkelingen in mijn buurt (%)	menontwbrt_p
-# oordeel aanbod ov onvoldoende-voldoende (1-10)	vkov_r
-# duur wonen whuurquote
-# aandeel woningen met een energielabel 	wlabelefg_p
-# onderhoud eigen corporatiewoning (1-10)	wonderhoudwoning_r
-
-
+# ontwikkeling woningvoorraad (index, 2017 =  100) 
+# - met eigen woning (1-10)
+# - tevredenheid eigen buurt (1-10)
+# - betrokkenheid bew. buurt (1-10)
+# - omgang tussen groepen (1-10)
+# - verbondenheid met de buurt (%)
+# - aanbod winkels food (1-10) 
 
 
 ### waardering woning
+
+
+hoog = 6
+breed = 12
 data_nw_def |>
-  filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("wwoning_r"), c("2019", "2021"), temporal_date)
+  mutate(indicator_sd = case_when(
+    variabele == "wwoning_r" ~ "tevredenheid over woning",
+    variabele == "lbuurt_r"  ~ "tevredenheid met buurt")
+  )|>
+  my_kaart_plot( 
+    var = c("wwoning_r", "lbuurt_r"),
+    geo = "wijken",
+    afr = 1,
+    jaar =  NULL,
+    facet_var = fct_rev(indicator_sd))
 
-# kaart krap wonen totaal en jogneren
-data_nw_def |>
-  filter(value>0)|>
-  my_kaart_plot(c("w_krap_p", "w_krap_kind_p"), "buurten", NULL, facet_var = indicator_sd)
-
-
-
-
-
-w_krap_kind_p
-
-### onderhoud corporatiewoning
-data_nw_def |>
-  filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("wonderhoudwoning_r"), c("2019", "2021"), temporal_date)
-
-
-# kaart energielabel
-data_nw_def |>
-  my_kaart_plot(c("wlabelefg_p"), "wijken", c("2019", "2021"), temporal_date)
-
-
-# kaart energielabel
-data_nw_def |>
-  filter(!is.na(value),
-         value!= 0)|>
-  my_kaart_plot(c("whuurquote"), "wijken", NULL, NULL)
 
 data_nw_def |>
-  my_bar_plot(c("whuurquote"),  c("2019", "2021"), temporal_date)
+  mutate(indicator_sd = case_when(
+    variabele == "lbetrokken_r"       ~ "betrokkenheid van bewoners",
+    variabele == "lomganggroepenb_r"  ~ "omgang tussen groepen")
+    )|>
+  my_kaart_plot( 
+    var = c("lbetrokken_r", "lomganggroepenb_r"),
+    geo = "wijken",
+    afr = 1,
+    jaar =  NULL,
+    facet_var = indicator_sd)
 
-# bar sociale cohesie
 data_nw_def |>
-  filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("lsoccoh_r"), c("2019", "2021"), temporal_date)
+  mutate(indicator_sd = case_when(
+    variabele == "lverbondenbuurt_p" ~ "verbondenheid met buurt",
+    variabele == "bhwinkelaanbod_r"  ~ "winkelaanbod food")
+    )|>
+  my_kaart_plot( 
+    var = c("lverbondenbuurt_p", "bhwinkelaanbod_r"),
+    geo = "wijken",
+    afr = 1,
+    jaar =  NULL,
+    facet_var = indicator_sd)
 
-### "lverbondenbuurt_p" en "wzeenzj_p" (eenzaam) alleen op sd-niveau --
 
 
 ### GEEL: Kansen voor de jeugd ---
@@ -136,6 +208,20 @@ data_nw_def |>
 # aandeel jongeren (18-26) met startkwalificatie, totaal (%)	startkwalificatie_p
 
 data_nw_def |>
+  mutate(indicator_sd = case_when(
+    variabele == "w_krap_kind_p"  ~ "jongeren in krapwonende gezinnen",
+    variabele == "iminjong130_p"  ~ "jongeren in minimahuishoudens")
+  )|>
+  my_kaart_plot( 
+    var =  c("w_krap_kind_p", "iminjong130_p"), 
+    geo = "wijken",
+    afr = 0,
+    jaar =   NULL, 
+    facet_var = indicator_sd)
+
+
+
+data_nw_def |>
   my_kaart_plot( 
     var =  c("neet_jongeren_p"), 
     geo = "buurten",
@@ -150,7 +236,7 @@ jeugdhulp <- c(
   "jeugdhulp_12tm17_p")
 
 hoog = 7
-# bar sociale cohesie
+
 data_nw_def |>
   filter(
     spatial_code != 'FA', 
@@ -202,15 +288,9 @@ data_nw_def |>
     jaar =  NULL,
     facet_var = variabele)
 
-breed = 14
-hoog = 7
 
-data_nw_def |>
-  my_kaart_plot( 
-    var =  c("w_krap_kind_p"), 
-    geo = "buurten",
-    jaar =   c("2021") , 
-    facet_var = temporal_date)
+
+
 
 school <- c("ostrflez_p",  "ostrfrek_p",  "ostrftaal_p")
 
@@ -351,64 +431,6 @@ data_nw_def |>
   my_bar_plot(c("sk017_kwets34_p"), c("2020"), temporal_date)
 
 
-### eigenaarschap ---
-
-
-
-
-
-
-# invloed: alleen op gebiedsniveau voor 2019
-data_nw_def |> 
-  filter(
-    spatial_type %in% c('gebieden',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("binvloed_p"), c("2018", "2019","2020", "2021"), temporal_date)
-
-
-# inzet buurt (uit SvdS) alleen gebieden
-data_nw_def |> 
-  filter(
-    spatial_type %in% c('gebieden',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("pinzetbrt_p"), c("2018", "2019","2020", "2021"), temporal_date)
-
-
-
-# omgang: alleen op gebiedsniveau voor 2019
-data_nw_def |> 
-  filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("lomganggroepenb_r"), c("2018", "2019","2020", "2021"), temporal_date)
-
-
-
-# discriminatie (data uit veiligheidsmonitor)
-data_nw_def |> 
-  filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("ldiscri_p"), c( "2021"), temporal_date)
-
-data_nw_def |>
-  my_kaart_plot( 
-    var = c("ldiscri_p" , "lomganggroepenb_r"),
-    geo = "wijken",
-    jaar =  NULL,
-    facet_var = indicator_sd)
-
-
-# Veiligehid
-
-# zwerfvuil : nu alleen op gebiedsniveau: merijn gaat data leveren op wijkniveau
-data_nw_def |> 
-  filter(
-    spatial_type %in% c('gebieden',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("or_grof_p"), c("2019"), temporal_date)
-
-
-# veilig voelen (data uit veiligheidsmonitor)
-data_nw_def |> 
-  filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("vveiligvoelen_p"), c( "2021"), temporal_date)
 
 
 
@@ -422,27 +444,4 @@ data_nw_def |>
     spatial_type %in% c("gebieden") ~ "gebieden",
     TRUE                            ~ "stadsdeel en stad"))|>
   my_line_plot("vveiligvoelen_p", fct_rev(facet))
-
-
-# jeugdige verdachten
-data_nw_def |> 
-  filter(
-    spatial_type %in% c('gebieden',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("vjeugdige_p"), c( "2021"), temporal_date)
-
-
-# jeugdige verdachten
-data_nw_def |> 
-  filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("vveiligavond_r"), c( "2021"), temporal_date)
-
-
-data_nw_def |>
-  my_kaart_plot( 
-    var = c("vveiligavond_r"),
-    geo = "buurten",
-    afr = 1,
-    jaar =  c("2019"),
-    facet_var = temporal_date)
 

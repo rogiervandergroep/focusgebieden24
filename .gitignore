@@ -14,7 +14,7 @@
 01 indicatoren/
 03 tussentijds/
 04 tabellen/
-05 factsheets Noord DEF/
+10 rapporten/
 
 # Example code in package build process
 *-Ex.R
@@ -24,6 +24,10 @@
 
 # Output files from R CMD check
 /*.Rcheck/
+
+# excel files
+/*.xlsx
+
 
 # RStudio files
 .Rproj.user/

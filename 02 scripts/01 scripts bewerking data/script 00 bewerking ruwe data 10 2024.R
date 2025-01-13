@@ -74,9 +74,9 @@ write.xlsx(df_flex_werkend, "00 ruwe data/niet in bbga/data_polisadministratie_2
 # PBBV_P
 # PBBVJEUGD_P
 
-
-#PZOND1866_P op stadsdeelniveau
-#NB: deze tabel vervangt data_rebebb (alleen data beschikbaar op SD en Gebiedsniveau)
+######################################################################################
+# PZOND1866_P op stadsdeelniveau
+# NB: deze tabel vervangt data_rebebb (alleen data beschikbaar op SD en Gebiedsniveau)
 df_aandeel_ondern_sd <- read.xlsx("00 ruwe data/ruw input 10 2024/20240912_aandeel_zelfstandigen_gewogen.xlsx", sheet = 1 ) |>
   rename(
     'temporal_date'= 'Jaar', 
@@ -100,7 +100,8 @@ df_aandeel_ondern_ams <- df_aandeel_ondern_sd |>
     Zelfstandigen          = sum(Zelfstandigen)
   )|>
   mutate(
-    value = Zelfstandigen/(Flexibel.dienstverband+Vast.dienstverband+Zelfstandigen)*100)|>
+    value = Zelfstandigen/(Flexibel.dienstverband+Vast.dienstverband+Zelfstandigen)
+    )|>
   
   add_column(
     spatial_name = 'Amsterdam',
@@ -136,8 +137,11 @@ df_aandeel_ondern_geb <- read.xlsx("00 ruwe data/ruw input 10 2024/20240912_aand
     )
 
 df_aandeel_ondern <- bind_rows(df_aandeel_ondern_sd,df_aandeel_ondern_geb, df_aandeel_ondern_ams)|>
-  select(all_of(bbga_kol))
+  select(all_of(bbga_kol))|>
+  mutate(value=value*100)
+
 write.xlsx(df_aandeel_ondern, "00 ruwe data/niet in bbga/data_aandeelondernemers_19_23_def.xlsx")
+
 #################################################################################################
     
 ###########################
@@ -295,7 +299,6 @@ SES_WOA_sd <- SES_WOA_wijk |>
     )|>
   add_column(spatial_date = '20220324')
 
-SES_DEF <- 
 
 write.xlsx(
   bind_rows(SES_WOA_sd, SES_AMS)|>
@@ -311,6 +314,8 @@ write.xlsx(
 # woningen opvoer minus afvoer
 # aantal opgeleverde nieuwbouw woningen
 # aantal nieuw te bouwen woningen (in aanbouw genomen) bron: https://maps.amsterdam.nl/woningbouwplannen_monitor/
+# nb: mutaties 2024 zijn leverbaar in januari 2024
+
 
 woningbouw <- openxlsx::read.xlsx(
   "00 ruwe data/ruw input 10 2024/mutaties_naar_stadsdeel.xlsx")|>
@@ -334,20 +339,31 @@ woning_tot<-bind_rows(won_ams, woningbouw)|>
     names_to = 'measure')|>
   add_column(spatial_date = '20220324')
 
-write.xlsx(woning_tot, "00 ruwe data/niet in bbga/data_won_mutaties.xlsx")
+nieuwbouw <- openxlsx::read.xlsx(
+  "00 ruwe data/ruw input 10 2024/mutaties_naar_stadsdeel.xlsx", "nieuwbouwplannen")|>
+  mutate(spatial_date = as.character(spatial_date))
 
 
+write.xlsx(bind_rows(woning_tot,nieuwbouw), "00 ruwe data/niet in bbga/data_won_mutaties.xlsx")
 
 ### Schuldhulpverlening
 
-schuld <- openxlsx::read.xlsx(
-  "00 ruwe data/ruw input 10 2024/schuldhulpverlening.xlsx")|>
-  
-  pivot_longer(
-    cols= c(Amsterdam:Zuidoost), 
-    values_to = 'value', 
-    names_to = 'spatial_name')|>
-  
+### ??? ---
+
+### aandeel met schulden uit REB via Marloes---
+schulden <- openxlsx::read.xlsx(
+  "00 ruwe data/ruw input 10 2024/0. bbga problematische schulden per stadsdeel 2019-2023.xlsx")
+
+
+schuld_sd <- schulden |>
+  select(stadsdeelnaam:aantal_nee)|>
+  mutate(value = round(aantal_ja/(aantal_ja+aantal_nee)*100,1))|>
+  add_column(
+    measure = 'PROBSCHULD_P',
+    spatial_date = '20220324')|>
+  rename(
+    temporal_date=Jaar,
+    spatial_name=stadsdeelnaam)|>
   mutate(spatial_code = case_when(
     spatial_name == 'Amsterdam'   ~ '0363',
     spatial_name == 'Centrum'     ~ 'A',
@@ -357,10 +373,160 @@ schuld <- openxlsx::read.xlsx(
     spatial_name == 'Oost'        ~ 'M',
     spatial_name == 'Noord'       ~ 'N',
     spatial_name == 'Zuidoost'    ~ 'T')
-    )|>
-  add_column(spatial_date = '20220324')|>
-  rename(temporal_date = jaar)
+  )|>
+  select(
+    spatial_name, spatial_code, spatial_date, temporal_date, measure, value )
   
-write.xlsx(schuld, "00 ruwe data/niet in bbga/data_schuldhulpverlening.xlsx")
+  
 
+schuld_ams <- schulden |>
+  select(stadsdeelnaam:aantal_nee)|>
+  group_by(Jaar)|>
+  summarise(
+    aantal_ja  = sum(aantal_ja),
+    aantal_nee = sum(aantal_nee))|>
+  mutate(value = round(aantal_ja/(aantal_ja+aantal_nee)*100,1))|>
+  add_column(
+    measure      = 'PROBSCHULD_P',
+    spatial_date = '20220324',
+    spatial_name = 'Amsterdam',
+    spatial_code = '0363')|>
+  rename(
+    temporal_date=Jaar)|>
+  select(
+    spatial_name, spatial_code, spatial_date, temporal_date, measure, value )
+
+
+  
+write.xlsx(bind_rows(schuld_sd,schuld_ams),"00 ruwe data/niet in bbga/data_prob_schulden.xlsx")
+
+# veiligheidsindexen toegevoegd eind november 2024
+veiligheidsindex <- openxlsx::read.xlsx(
+  "00 ruwe data/ruw input 10 2024/data_veiligheidsindex_stadsdelen.xlsx", sheet = 'index_basis')
+
+veiligheidsindex_long <- veiligheidsindex |>
+  pivot_longer(cols= c(v_gercrim_i:v_vermijd_i), names_to = 'measure' , values_to = 'value')|>
+  add_column(spatial_date='20220324')
+
+write.xlsx(veiligheidsindex_long,"00 ruwe data/niet in bbga/data_veiligheidsindex.xlsx")
+
+
+# zittende en nieuwe bewoners toegevoegd begin december 2024
+
+df_zittend <- bind_rows(
+  
+  openxlsx::read.xlsx(
+    "00 ruwe data/ruw input 10 2024/zittende_en_nieuwe_bewoners_in_stadsdeel.xlsx", sheet ='buurt')|>
+    add_column(spatial_type = 'buurt')|>
+    rename (
+      spatial_name = gbd_brt_naam,
+      spatial_code = gbd_brt_code)|>
+    filter(spatial_code != 'Totaal'),
+  
+  openxlsx::read.xlsx(
+    "00 ruwe data/ruw input 10 2024/zittende_en_nieuwe_bewoners_in_stadsdeel.xlsx", sheet ='wijk')|>
+    add_column(spatial_type = 'wijk')|>
+    rename (
+      spatial_name = gbd_wijk_naam,
+      spatial_code = gbd_wijk_code)|>
+    mutate(spatial_name = replace_na(spatial_name, "NA"))|>
+    filter(spatial_code != 'Totaal'),
+  
+  openxlsx::read.xlsx(
+    "00 ruwe data/ruw input 10 2024/zittende_en_nieuwe_bewoners_in_stadsdeel.xlsx", sheet ='ggw')|>
+    add_column(spatial_type = 'ggw')|>
+    rename (
+      spatial_name = gbd_ggw_naam,
+      spatial_code = gbd_ggw_code)|>
+    filter(spatial_code != 'Totaal'),
+  
+  openxlsx::read.xlsx(
+    "00 ruwe data/ruw input 10 2024/zittende_en_nieuwe_bewoners_in_stadsdeel.xlsx", sheet ='stadsdeel')|>
+    add_column(spatial_type = 'stadsdeel')|>
+    rename (
+      spatial_name = gbd_sdl_naam,
+      spatial_code = gbd_sdl_code)
+    ) |>
+  
+  mutate(spatial_code = str_replace_all(spatial_code, "Totaal", "0363"))|>
+  mutate(spatial_type = case_when(
+    spatial_code == '0363' ~ 'gemeente',
+    TRUE ~ spatial_type)
+  ) |>
+  add_column(
+    temporal_date = '20240101',
+    spatial_date  = '20220324')|>
+  mutate(
+    bew_nieuw = (aantal_nieuwe_bewoners_in_stadsdeel / totaal_18_plussers)*100,
+    bew_oud  = (aantal_zittende_bewoners_in_stadsdeel / totaal_18_plussers)*100
+  ) |>
+  
+  pivot_longer(cols = c(
+    aantal_nieuwe_bewoners_in_stadsdeel,
+    aantal_zittende_bewoners_in_stadsdeel, 
+    totaal_18_plussers,
+    bew_nieuw, bew_oud), names_to = 'measure')
+           
+  
+write.xlsx(df_zittend,"00 ruwe data/niet in bbga/data_bew_zittend_nieuw.xlsx")
+  
+  
+### toevoeging 2021 Armoedemonitor data bminreg_p en bminregjong_p
+
+# inlezen gebieden met gebiedscodes
+source("02 scripts/01 scripts bewerking data/script 00 basis gebiedsindelingen.R")
+
+
+geo_list <- geo_list|>
+  map(\(x) select(x, spatial_code, spatial_name))
+
+library(openxlsx)
+
+data_reg_23 <- read.xlsx(
+  "00 ruwe data/ruw input 10 2024/Stadsdeelrapportage Amsterdamse Armoedemonitor 2023.xlsx",
+  sheet = "hh bereik", startRow = 2)|>
+  select(spatial_type, spatial_name, BMINREG_P, BMINREGJONG_P)
+
+
+df_reg_23 <- bind_rows(
+
+  # op wijkniveau
+  data_reg_23 |>
+
+    filter(spatial_type == 'wijken')|>
+    left_join(geo_list$wijken_nieuw, by= "spatial_name")|>
+    pivot_longer(cols  = c(BMINREG_P,BMINREGJONG_P), names_to = 'measure'),
+
+  # op gebiedniveau
+  data_reg_23 |>
+  
+    filter(spatial_type == 'gebieden')|>
+    left_join(geo_list$gebieden_nieuw, by= "spatial_name")|>
+    pivot_longer(cols  = c(BMINREG_P,BMINREGJONG_P), names_to = 'measure' ),
+
+  # op stadsdeel niveau en Amsterdam
+  data_reg_23 |>
+    
+    filter(spatial_type %in% c('stadsdelen', 'gemeente'  ))|>
+    left_join(geo_list$sd_nieuw, by= "spatial_name")|>
+    pivot_longer(cols  = c(BMINREG_P,BMINREGJONG_P), names_to = 'measure' )
+) |>
+
+  mutate(
+
+    spatial_code = case_when(
+      spatial_name == 'Oud-West, De Baarsjes' ~ 'GE05',
+      spatial_name == 'Amsterdam' ~ '0363',
+      TRUE ~ spatial_code)
+    )|>
+  add_column(
+    spatial_date  = '20220324',
+    temporal_date = '20230101')
+
+
+
+write.xlsx(df_reg_23, "00 ruwe data/niet in bbga/data_regelingen_23.xlsx")
+  
+  
+    
 

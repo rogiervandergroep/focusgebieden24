@@ -50,6 +50,11 @@ theme_os2 <- function(orientation="horizontal", legend_position = "bottom"){
 ##############################
 
 
+hcl <- farver::decode_colour(blauw_pal, "rgb", "hcl")
+
+label_col <- ifelse(hcl[, "l"] > 50, "black", "white")
+
+
 breed = 12
 hoog = 7
 
@@ -186,14 +191,19 @@ my_kaart_plot <- function(x, var, afr, geo, jaar, facet_var){
     
     geom_sf(data = kaart, aes(fill = value_kl_labels) , color = "white", linewidth = 0.9)+
     
-    #geom_sf(data = kaart_wijk,  color = "white", fill = NA, linewidth = 1.1)+
-    
-    geom_sf_text(data = kaart, aes(label = round(value, afr)) , family = font, check_overlap = F)+
+    geom_sf_text(data = kaart, aes(
+      label = round(value, afr),
+      color = value_kl_labels),
+      lineheight = .8,
+      family = font, check_overlap = F)+
     
     theme_os()+
     labs(title = NULL,  x = NULL, y = NULL) +
     scale_fill_manual(values  = blauw_pal[c(9,7,5,3,1)]) +
-    guides(fill = guide_legend( reverse = F, nrow = 1))+
+    scale_color_manual(name = NULL, values = label_col[c(9,7,5,3,1)])+
+    guides(
+      colour = "none",
+      fill = guide_legend( reverse = F, nrow = 1))+
     theme(
       plot.subtitle = element_text(family = font, size = 12),
       legend.text = element_text(family = font, size = 12),
@@ -215,8 +225,6 @@ my_kaart_plot <- function(x, var, afr, geo, jaar, facet_var){
 
 
 
-grDevices::windowsFonts("Amsterdam Sans" = grDevices::windowsFont("Amsterdam Sans"))
-font <- "Amsterdam Sans"
 
 ### illustratieve kaart met namen ---
 kaart_wijk <- os_get_geom("wijken")|>
@@ -283,7 +291,7 @@ ggsave("10 rapporten/04 rapporten Nieuw-West/kaart_wijknamen.svg", device = "svg
 
 
 
-# 
+ 
 # x |>
 #   ggplot(aes(
 #     

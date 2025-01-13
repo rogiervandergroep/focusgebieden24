@@ -7,13 +7,11 @@ library(sf)
 
 grDevices::windowsFonts("Amsterdam Sans" = grDevices::windowsFont("Amsterdam Sans"))
 
-
 font <- "Amsterdam Sans"
 
 wild_pal <-c(
  "#ec0000","#004699","#00a03c",
  "#ffe600","#ff9100","#6cbd74","#fdb0cb","#bed200", "#d48fb9", "#a00078")
-
 
 theme_os2 <- function(orientation="horizontal", legend_position = "bottom"){
   
@@ -44,7 +42,6 @@ theme_os2 <- function(orientation="horizontal", legend_position = "bottom"){
   
 }
 
-
 hcl <- farver::decode_colour(blauw_pal, "rgb", "hcl")
 
 label_col <- ifelse(hcl[, "l"] > 50, "black", "white")
@@ -54,6 +51,20 @@ label_col <- ifelse(hcl[, "l"] > 50, "black", "white")
 ### scripts wijk factsheet ---
 ##############################
 
+# x is altijd data_zo_def
+
+# var is altijd een string_naam uit de kolom 'variabele' 
+
+# facet_var is de naam van de kolom waarop de figuur gesplitst moet worden
+# nb: default is NULL, Dit betekent dat als je niks invult de figuur ook niet gesplitst wordt
+
+# bij 'jaar' selecteer je binnen de kolom temporal_date de jaartallen die je wilt laten zien 
+#            naast het meest recente jaar ; vul je hier niets in dan krijg je alleen het meest recente jaar te zien
+
+# stack_var is een grouping variabele die gebruikt wordt om de gestapelde kolom op te splitsen
+
+# afr is een getal 0, 1 of 2 : om het aantal decimalen in een kaart te laten zien
+# geo is het niveau uit spatial_type wat je wil laten zien in je kaart
 
 breed = 12
 hoog = 7
@@ -61,7 +72,7 @@ hoog = 7
 # script lijnfiguur NW (geschikt voor data met meerdere jaren )
 my_line_plot <- function(x, var, facet_var = NULL){
   
-  plot<-x|>
+  plot <- x|>
     
     filter(
       !is.na(value),
@@ -76,10 +87,11 @@ my_line_plot <- function(x, var, facet_var = NULL){
     
     geom_line(aes(
       color = spatial_name)) +
-      labs(title = NULL , x = NULL, y = NULL) +
-      theme_os2(orientation="vertical")+ 
-      scale_color_manual(name= NULL, values  = wild_pal) +
-      guides(color      = guide_legend(reverse = F, nrow = 2))+
+    labs(title = NULL , x = NULL, y = NULL) +
+    theme_os2(orientation="vertical")+ 
+    scale_color_manual(name= NULL, values  = wild_pal) +
+    guides(color = guide_legend(reverse = F, nrow = 1))+
+    expand_limits(y = 0)+
     facet_wrap(vars({{facet_var}}))
   
   ggsave(glue::glue("10 rapporten/02 rapporten Zuidoost/figuren/line_{var}.svg"), width = breed, height = hoog)
@@ -102,83 +114,51 @@ my_stack_plot <- function(x, var){
       fill  = fct_reorder(spatial_name, spatial_code))
       ) +
     
-    geom_col() +
+    geom_col(color = value_kl_labels) +
     labs(title = NULL , x = NULL, y = NULL) +
+    
     theme_os2(orientation = "vertical")+ 
     scale_fill_manual(name = NULL, values  = discreet) +
     guides(fill= guide_legend(reverse = T))
   
- ggsave(plot = plot, filename = glue::glue("10 rapporten/02 rapporten Zuidoost/figuren/stack_{var}.svg"), width = breed, height = hoog)
+  ggsave(plot = plot, filename = glue::glue("10 rapporten/02 rapporten Zuidoost/figuren/stack_{var}.svg"), width = breed, height = hoog)
   
 }
-
+    
 # staafdiagram voor geselecteerde (default op null) en laatste jaar, op wijkniveau
-my_bar_plot <- function(x, var, jaar = NULL, facet_var){
+my_bar_plot <- function(x, var, jaar = NULL, fill_var = NULL, facet_var, schaal = 'fixed' ){
+  
 
-  driekleur <- c("#ec0000", "#004699", "#00a03c")
-
-  plot<-x|>
+  plot <-x|>
     filter(
       temporal_date %in% c(max(temporal_date), jaar),
       variabele %in% var)|>
 
     ggplot(aes(
       x = value,
-      y = fct_relevel(fct_reorder (spatial_name, value), "Amsterdam",  "Zuidoost"),
-      label = round(value,1))) +
+      y = fct_relevel(
+        fct_reorder (spatial_name, value), "Amsterdam",  "Zuidoost", "Zuidoost (totaal)", "Zuidoost (zittende bewoner)", "Zuidoost (nieuwe bewoner)"),
+      label = round(value, 1),
+      fill = {{fill_var}})) +
 
-    geom_col(fill = driekleur[2]) +
+    geom_col(position = 'dodge') +
 
-    geom_text(family = font, position = position_stack(vjust = 0.8), color = 'white')+
-    labs(y = NULL, x = NULL) +
-    theme_os2(orientation = "horizontal")+
-    facet_wrap(vars({{facet_var}}))
-  
-  ggsave(plot = plot, filename = glue::glue("10 rapporten/02 rapporten Zuidoost/figuren/bar_{var[1]}.svg"), device = "svg",  width = breed, height = hoog)
-}
-
-# staafdiagram voor geselecteerde (default op null) en laatste jaar, op wijkniveau
-my_bar_stack_plot <- function(x, var, jaar, stack_var, facet_var){
-  
-  plot<-x|>
-    filter(
-      temporal_date %in% c(max(temporal_date), jaar),
-      variabele %in% var)|>
-    pivot_wider(names_from = temporal_date, values_from = value, values_fill = 0)|>
-    pivot_longer(cols = starts_with("20"), names_to = "temporal_date")|>
-
-    ggplot(aes(
-      x = value,
-      y = fct_relevel(fct_reorder (spatial_name, value), "Amsterdam",  "Zuidoost"),
-      label = if_else(value > 0, round(value,1), NA),
-      fill  = fct_rev({{stack_var}}))
-      ) +
-    
-    geom_col(position = "dodge") +
-    
-    geom_text(
-      aes(color = fct_rev({{stack_var}})),
+    geom_text(color = 'white', 
       family = font, position = position_dodge(width = .9, ),  hjust  = 1.7 , size =  3.5)+
     
-    scale_fill_manual(name= NULL, values  = blauw_pal[c(2,4,6,8)])+
-    scale_color_manual(name= NULL, values = label_col[c(2,4,6,8)])+
-    
     labs(y = NULL, x = NULL) +
+    scale_fill_manual(name= NULL, values  = blauw_pal[c(2,4,6,8)])+
     theme_os2(orientation = "horizontal")+
-    facet_wrap(vars({{facet_var}}))+
-    guides(
-      color= 'none', 
-      fill = guide_legend( reverse = T, nrow = 1))
+    facet_wrap(vars({{facet_var}}), scales = schaal)
   
   ggsave(plot = plot, filename = glue::glue("10 rapporten/02 rapporten Zuidoost/figuren/bar_{var[1]}.svg"), device = "svg",  width = breed, height = hoog)
 }
+
+
 
 
 # kaart 
 my_kaart_plot <- function(x, var, afr, geo, jaar, facet_var){
-  
-
-  
   
   y <- x |>
     
@@ -260,6 +240,7 @@ my_kaart_plot <- function(x, var, afr, geo, jaar, facet_var){
  ggsave(glue::glue("10 rapporten/02 rapporten Zuidoost/figuren/kaart_{var[1]}.svg"), width = breed, height = hoog)
 
 }
+
 
 
 
