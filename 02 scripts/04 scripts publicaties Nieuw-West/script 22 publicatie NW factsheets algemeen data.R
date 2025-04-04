@@ -116,8 +116,8 @@ wb_nw <- my_style_sheet(
 )
 
 # Save the workbook to a file
-saveWorkbook(wb_nw, glue::glue("04 tabellen/03 tabellen nieuwwest/tabel eenmeting { naam_focusgebied } nov 2024.xlsx"), overwrite = TRUE)
-saveWorkbook(wb_nw, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel eenmeting { naam_focusgebied } nov 2024.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_nw, glue::glue("04 tabellen/03 tabellen nieuwwest/tabel eenmeting { naam_focusgebied } { datum_vandaag }.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_nw, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel eenmeting { naam_focusgebied } { datum_vandaag }.xlsx"), overwrite = TRUE)
 
 
 
@@ -200,8 +200,8 @@ wb_nw <- my_style_sheet(
 )
 
 # Save the workbook to a file
-saveWorkbook(wb_nw, glue::glue("04 tabellen/03 tabellen nieuwwest/tabel eenmeting { naam_focusgebied } fb jan 25.xlsx"), overwrite = TRUE)
-saveWorkbook(wb_nw, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel eenmeting { naam_focusgebied } fb jan 25.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_nw, glue::glue("04 tabellen/03 tabellen nieuwwest/tabel eenmeting { naam_focusgebied } fb { datum_vandaag }.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_nw, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel eenmeting { naam_focusgebied } fb { datum_vandaag }.xlsx"), overwrite = TRUE)
 
 
 

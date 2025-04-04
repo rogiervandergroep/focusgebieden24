@@ -61,5 +61,5 @@ wb_nplv <- my_style_sheet(
 )
 
 # Save the workbook to a file
-saveWorkbook(wb_nplv, "04 tabellen/04 tabellen NPLV/tabel alle data NPLV nov 2024.xlsx", overwrite = TRUE)
-saveWorkbook(wb_nplv, "04 tabellen/05 tabellen website focusgebieden/tabel alle data NPLV nov 2024.xlsx", overwrite = TRUE)
+saveWorkbook(wb_nplv, glue::glue("04 tabellen/04 tabellen NPLV/tabel alle data NPLV {datum_vandaag}.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_nplv, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel alle data NPLV {datum_vandaag}.xlsx"), overwrite = TRUE)

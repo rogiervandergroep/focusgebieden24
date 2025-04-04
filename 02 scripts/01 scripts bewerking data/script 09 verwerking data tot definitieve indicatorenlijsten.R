@@ -1,7 +1,7 @@
 
 # hieronder worden verschillende overzichten gemaakt van de indicatoren:
 
-source("02 scripts/01 scripts bewerking data/script 02 basis opbouw basisset.R")
+data_def2 <- read_rds("03 tussentijds/data_def2.rds")
 
 range <- data_def2 |>
   select(variabele, starts_with("besch_")) |>
@@ -171,9 +171,130 @@ addStyle(wb, "Colofon", style$header_colofon, rows = 1:3, cols = 1,gridExpand = 
 
 worksheetOrder(wb) <- c(sheet_nr_plus1, sheet_nr)
 ## Save workbook voor lijst indicatoren 
-saveWorkbook(wb, "04 tabellen/05 tabellen website focusgebieden/tabel overzicht indicatoren focusgebieden nov 24.xlsx", overwrite = TRUE)
+saveWorkbook(wb, "04 tabellen/05 tabellen website focusgebieden/tabel overzicht indicatoren focusgebieden jan 25.xlsx", overwrite = TRUE)
+
+
+#### BRON VERMELDING Zuidoost ---
+
+
+tabel_ind_def_bron <- tabel_ind_def |>
+  select(
+    indicator_sd, 
+    bron, mpzo, aanpak_noord, 
+    thema_zuidoost_label, thema_noord_eenmeting, thema_nw_label)
+
+zo_label <- tabel_ind_def |>
+  filter(!is.na(thema_zuidoost_label))|>
+  select(thema_zuidoost_label)|>
+  distinct()|>
+  arrange(thema_zuidoost_label)|>
+  mutate(thema_zuidoost_label= str_sub(thema_zuidoost_label, 1,3))|>
+  pull()
+
+no_label <- tabel_ind_def |>
+  filter(!is.na(thema_noord_eenmeting))|>
+  select(thema_noord_eenmeting)|>
+  distinct()|>
+  arrange(thema_noord_eenmeting)|>
+  mutate(thema_noord_eenmeting = str_sub(thema_noord_eenmeting, 1,2))|>
+  pull()
+  
+nw_label <- tabel_ind_def |>
+  filter(!is.na(thema_nw_kleur))|>
+  select(thema_nw_kleur,thema_nw_label)|>
+  distinct()|>
+  arrange(thema_nw_label)|>
+  select(thema_nw_kleur)|>
+  pull()
+
+  
+
+
+tabel_zo_bron <- tabel_ind_def_bron |>
+  filter(!is.na(thema_zuidoost_label))|>
+  select(thema_zuidoost_label, indicator_sd, bron)|>
+  arrange(thema_zuidoost_label)|>
+  group_by(thema_zuidoost_label)|>
+  group_split()|>
+  set_names(zo_label)
+
+tabel_no_bron <- tabel_ind_def_bron |>
+  filter(!is.na(thema_noord_eenmeting))|>
+  select(thema_noord_eenmeting, indicator_sd, bron)|>
+  arrange(thema_noord_eenmeting)|>
+  group_by(thema_noord_eenmeting)|>
+  group_split()|>
+  set_names(no_label)
+
+tabel_nw_bron <- tabel_ind_def_bron |>
+  filter(!is.na(thema_nw_label))|>
+  select(thema_nw_label, indicator_sd, bron)|>
+  arrange(thema_nw_label)|>
+  group_by(thema_nw_label)|>
+  group_split()|>
+  set_names(nw_label)
+  
+## Create a new workbook
+
+### bronvermelding Zuidoost ---
+wb <- createWorkbook()
+tabel <- tabel_zo_bron
+
+# Loop through the list and add each element to a new sheet
+for (i in seq_along(tabel)) {
+  
+  sheet_name <- names(tabel)[i]  
+  
+  addWorksheet(wb, sheet_name)   
+  
+  writeData (wb, sheet_name, tabel[[i]], headerStyle = style$header_left) 
+}
+
+## Save workbook voor lijst indicatoren 
+saveWorkbook(wb, "10 rapporten/02 rapporten Zuidoost/mazo_bron.xlsx", overwrite = T)
 
 
 
+
+## Create a new workbook
+
+
+
+### bronnen noord
+wb <- createWorkbook()
+tabel <- tabel_no_bron
+
+# Loop through the list and add each element to a new sheet
+for (i in seq_along(tabel)) {
+  
+  sheet_name <- names(tabel)[i]  
+  
+  addWorksheet(wb, sheet_name)   
+  
+  writeData (wb, sheet_name, tabel[[i]], headerStyle = style$header_left) 
+}
+
+
+## Save workbook voor lijst indicatoren 
+saveWorkbook(wb, "10 rapporten/03 rapporten Noord/aanpak_noord_bron.xlsx", overwrite = T)
+
+
+
+### bronnen Nieuw-West 
+wb <- createWorkbook()
+tabel <- tabel_nw_bron
+
+# Loop through the list and add each element to a new sheet
+for (i in seq_along(tabel)) {
+  
+  sheet_name <- names(tabel)[i]  
+  
+  addWorksheet(wb, sheet_name)   
+  
+  writeData (wb, sheet_name, tabel[[i]], headerStyle = style$header_left) 
+}
+
+## Save workbook voor lijst indicatoren 
+saveWorkbook(wb, "10 rapporten/04 rapporten Nieuw-West/samen_nw_bron.xlsx", overwrite = T)
 
 

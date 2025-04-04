@@ -3,27 +3,30 @@
 
 # met dit script wordt de data ingelezen en worden functies aangemaakt voor de plots
 source("02 scripts/04 scripts publicaties Nieuw-West/script 22 publicatie NW factsheets algemeen data.R")
-source("02 scripts/04 scripts publicaties Nieuw-West/script 20 publicatie NW functies.R")
+source("02 scripts/01 scripts bewerking data/script 50 functies voor kaarten.R")
+
+
+breed = 10
+hoog = 6
+aantal_kolommen = 1
+legenda_pos = 'right'
+my_kaart("Nieuw-West")
+
+focusbuurten <- c(
+  "FB03",  "FB08",  "FC02",  "FC03",  "FE01",  "FE02",  "FJ01",  "FK01",  "FL03",  "FM06"
+)
+
+breed = 10
+hoog = 6
+
+# algemeen kaartje met wijknamen Nieuw-West
+legenda_pos = 'right'
+aantal_kolommen = 1
+my_focus_buurt_kaart("Nieuw-West")
+
 
 
 data_nw_def <- data_nw_ruw
-
-# FA           Sloterdijk Nieuw-West
-# FB FC FD FE  Geuzenveld Slotermeer
-# FF FH FJ FK  Osdorp
-# FL FM FN FP  Slotervaart
-# FG FQ        De Aker SLoten Nieuw-Sloten
-
-geb_levels <- c(
-  'Sloterdijk Nieuw-West',
-  'Geuzenveld, Slotermeer',
-  'Osdorp',
-  'De Aker, Sloten, Nieuw-Sloten',
-  'Slotervaart')
-
-
-
-
 
 ### eigenaarschap ---
 
@@ -32,11 +35,13 @@ geb_levels <- c(
 
 hoog = 4
 breed = 12
+stadsdeel = 'Nieuw-West'
 # invloed: alleen op gebiedsniveau voor 2019
 data_nw_def |> 
   filter(
     spatial_type %in% c( 'stadsdelen', 'gemeente'))|>
   my_bar_plot(
+    fill_var = temporal_date,
     var = c("binvloed_p"),
     jaar = NULL, 
     facet_var = tweedeling_def)
@@ -55,7 +60,7 @@ data_nw_def |>
     jaar = c("2020"), 
     facet_var = temporal_date)
 
-
+legenda_pos = 'bottom'
 hoog  = 6
 breed = 12
 data_nw_def |>
@@ -65,7 +70,6 @@ data_nw_def |>
     afr = 0,
     jaar = c("2020"), 
     facet_var = temporal_date)
-
 
 ### Veiligehid ---
 
@@ -98,11 +102,33 @@ data_nw_def |>
     jaar =  NULL,
     facet_var = indicator_sd)
 
+# objectieve veiligheid
 
+# geregistreerde criminatiliteitsindex 
+# gerapporteerd slachtofferschapindex 
+
+breed = 10
+hoog =5
+legenda_pos = 'bottom'
+data_nw_def |>
+  mutate(indicator_sd = case_when(
+    variabele == "v_gercrim_i" ~ "criminaliteit (index)",
+    variabele == "v_slacht_i"  ~ "slachtofferschap (index)")
+  )|>
+  my_kaart_plot( 
+    var = c("v_gercrim_i", "v_slacht_i"),
+    geo = "wijken",
+    afr = 1,
+    jaar =  NULL,
+    facet_var = indicator_sd)
+
+# subjectieve veiligheid
+
+legenda_pos = 'bottom'
 data_nw_def |>
   mutate(indicator_sd = case_when(
     variabele == "v_vermijd_i"     ~ "vermijding (index)",
-    variabele == "v_onvbeleving_i" ~ "onveiligeidsbeleving (index)")
+    variabele == "v_onvbeleving_i" ~ "onveiligheidsbeleving (index)")
   )|>
   my_kaart_plot( 
     var = c("v_onvbeleving_i", "v_vermijd_i"),
@@ -112,22 +138,15 @@ data_nw_def |>
     facet_var = indicator_sd)
 
 
+# veiligheid winkelgebieden -
 
-
-breed = 12
 data_nw_def |>
-  my_kaart_plot( 
-    var = c("v_gercrim_i", "v_slacht_i"),
-    geo = "wijken",
-    afr = 1,
-    jaar =  NULL,
-    facet_var = indicator_sd)
-
-
-
-
-
-
+  filter(
+    variabele %in% c("bhwin_veil_dag_r" , "bhwin_veil_avond_r")
+    )|>
+  select(variabele, spatial_code, spatial_name, value)|>
+  pivot_wider(values_from = value, names_from = variabele)|>
+  write.xlsx("10 rapporten/04 rapporten Nieuw-West/figuren/tabel_winkelgebieden.xlsx")       
 
 
 ### GRIJS: Woning en woonomgevin
@@ -148,15 +167,21 @@ hoog = 6
 breed = 12
 data_nw_def |>
   mutate(indicator_sd = case_when(
-    variabele == "wwoning_r" ~ "tevredenheid over woning",
-    variabele == "lbuurt_r"  ~ "tevredenheid met buurt")
+    
+    variabele == "wwoning_r"     ~ "tevredenheid woning",
+    variabele == "wwoningcorp_r" ~ "tevredenheid corporatiewoning",
+    variabele == "lbuurt_r"      ~ "tevredenheid met buurt")
+    
   )|>
   my_kaart_plot( 
-    var = c("wwoning_r", "lbuurt_r"),
+
+    var = c("wwoning_r",  "wwoningcorp_r", "lbuurt_r"),
     geo = "wijken",
     afr = 1,
     jaar =  NULL,
-    facet_var = fct_rev(indicator_sd))
+    facet_var = fct_relevel(
+      indicator_sd, 
+      "tevredenheid woning", "tevredenheid corporatiewoning", "tevredenheid met buurt"))
 
 
 data_nw_def |>
@@ -165,6 +190,7 @@ data_nw_def |>
     variabele == "lomganggroepenb_r"  ~ "omgang tussen groepen")
     )|>
   my_kaart_plot( 
+
     var = c("lbetrokken_r", "lomganggroepenb_r"),
     geo = "wijken",
     afr = 1,
@@ -177,6 +203,7 @@ data_nw_def |>
     variabele == "bhwinkelaanbod_r"  ~ "winkelaanbod food")
     )|>
   my_kaart_plot( 
+  
     var = c("lverbondenbuurt_p", "bhwinkelaanbod_r"),
     geo = "wijken",
     afr = 1,
@@ -186,26 +213,6 @@ data_nw_def |>
 
 
 ### GEEL: Kansen voor de jeugd ---
-# vooralsnog niet gebruikt - staat als wel primair
-# aandeel dat enige vorm van jeugdhulp gebruikt (leeftijd 0 t/m 5) (%)	  jeugdhulp_0tm5_p
-# aandeel dat enige vorm van jeugdhulp gebruikt (leeftijd 12 t/m 17) (%)	jeugdhulp_12tm17_p
-# aandeel dat enige vorm van jeugdhulp gebruikt (leeftijd 18 t/m 22) (%)	jeugdhulp_18tm22_p
-# aandeel dat enige vorm van jeugdhulp gebruikt (leeftijd 6 t/m 11) (%)	  jeugdhulp_6tm11_p
-# toevoegen aandeel dat ooit gebruik heeft gemaakt van jeugdhulp?
-
-
-# percentage jongeren (16 t/m/ 26) zonder werk of opleiding (NEET)	neet_jongeren_p
-
-# aandeel leerlingen van groep 8 dat streefniveau lezen haalt (%)	  ostrflez_p
-# aandeel leerlingen van groep 8 dat streefniveau rekenen haalt (%)	ostrfrek_p
-# aandeel leerlingen van groep 8 dat streefniveau taal haalt (%)	  ostrftaal_p
-
-# aandeel jongeren in gezin dat krap woont (%)	w_krap_kind_p
-
-# onderadvisering leerlingen (%)	otoetsh_p
-# overadvisering leerlingen (%) 	otoetsl_p
-
-# aandeel jongeren (18-26) met startkwalificatie, totaal (%)	startkwalificatie_p
 
 data_nw_def |>
   mutate(indicator_sd = case_when(
@@ -219,125 +226,57 @@ data_nw_def |>
     jaar =   NULL, 
     facet_var = indicator_sd)
 
-
-
-data_nw_def |>
-  my_kaart_plot( 
-    var =  c("neet_jongeren_p"), 
-    geo = "buurten",
-    jaar =   c("2018", "2020") , 
-    facet_var = temporal_date)
-
-
-
-jeugdhulp <- c(
-  "jeugdhulp_0tm5_p",
-  "jeugdhulp_6tm11_p",
-  "jeugdhulp_12tm17_p")
-
-hoog = 7
-
-data_nw_def |>
-  filter(
-    spatial_code != 'FA', 
-    spatial_code != 'FF',
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(jeugdhulp, NULL, variabele)
-
-hoog = 5
-# line met NEET
-data_nw_def |>
-  filter(
-    spatial_type %in% c('gebieden', "stadsdelen", "gemeente")
-    )|>
-  mutate(facet = case_when(
-    spatial_type %in% c("gebieden") ~ "werkgebieden",
-    TRUE                            ~ "stadsdeel en stad")
-    )|>
-  my_line_plot("neet_jongeren_p", facet)
-
-
 # bar met NEET
+legenda_pos = 'bottom'
+breed = 10
+hoog = 6
 data_nw_def |>
-  filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("neet_jongeren_p"), c("2020"), temporal_date)
-
-
-
-# bar met startkwalificatie : alleen 2019 en 2021
-data_nw_def |> 
-  filter(
-  spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("startkwalificatie_p"), c("2019"), temporal_date)
-
-data_nw_def |>
+  mutate(indicator_sd = case_when(
+    variabele == "startkwal_zonder_p"  ~ "geen startkwalificatie (%)",
+    variabele == "neet_1826_p"         ~ "geen werk of opleiding (%)")
+  )|>
   my_kaart_plot( 
-    var =  c("startkwalificatie_p", "neet_jongeren_p"), 
-    geo = "buurten",
+    var =  c("startkwal_zonder_p", "neet_1826_p"), 
+    geo = "wijken",
+    afr = 0,
     jaar =   NULL,
     facet_var = indicator_sd)
-
-breed = 7
-hoog = 8
-
-data_nw_def |>
-  my_kaart_plot( 
-    var =  jeugdhulp,
-    geo = "wijken",
-    jaar =  NULL,
-    facet_var = variabele)
-
-
-
 
 
 school <- c("ostrflez_p",  "ostrfrek_p",  "ostrftaal_p")
 
+hoog = 4 
 data_nw_def |>
-  filter(value!=0)|>
-  my_kaart_plot( 
+  mutate(indicator_sd = case_when(
+    variabele == "ostrflez_p"   ~ "streefniveau lezen (%)",
+    variabele == "ostrfrek_p"   ~ "streefniveau rekenen (%)",
+    variabele == "ostrftaal_p"  ~ "streefniveau taal (%)")
+    )|>
+  filter(
+    spatial_type %in% c( 'stadsdelen', 'gemeente'))|>
+  my_line_plot(
     var =  school,
-    geo = "wijken",
-    jaar =  NULL,
-    facet_var = variabele)
-
-hoog = 5 
-data_nw_def |>
-  filter(
-    spatial_type %in% c('gebieden', "stadsdelen", "gemeente"))|>
-  mutate(facet = case_when(
-    spatial_type %in% c("gebieden") ~ "gebieden",
-    TRUE                            ~ "stadsdeel en stad"))|>
-  my_line_plot("ostrflez_p", fct_rev(facet))
-
-data_nw_def |>
-  filter(
-    spatial_type %in% c('gebieden', "stadsdelen", "gemeente"))|>
-  mutate(facet = case_when(
-    spatial_type %in% c("gebieden") ~ "gebieden",
-    TRUE                            ~ "stadsdeel en stad"))|>
-  my_line_plot("ostrftaal_p", fct_rev(facet))
-
-data_nw_def |>
-  filter(
-    spatial_type %in% c('gebieden', "stadsdelen", "gemeente"))|>
-  mutate(facet = case_when(
-    spatial_type %in% c("gebieden") ~ "gebieden",
-    TRUE                            ~ "stadsdeel en stad"))|>
-  my_line_plot("ostrfrek_p", fct_rev(facet))
-
-toets <- c("otoetsh_p","otoetsl_p")
-
-data_nw_def |>
-  filter(value!=0)|>
-  my_kaart_plot( 
-    var =  toets,
-    geo = "wijken",
-    jaar =  NULL,
     facet_var = indicator_sd)
 
-# 
+
+hoog = 5
+data_nw_def |> 
+  mutate(indicator_sd = case_when(
+    variabele == "ostrflez_p"   ~ "streefniveau lezen (%)",
+    variabele == "ostrfrek_p"   ~ "streefniveau rekenen (%)",
+    variabele == "ostrftaal_p"  ~ "streefniveau taal (%)")
+  )|>
+  filter(
+    spatial_name != 'Sloterdijk Nieuw-West',
+    spatial_type %in% c('gebieden',  'stadsdelen', 'gemeente')
+    )|>
+  my_bar_plot(
+    var = school,
+    jaar = c("2020"),
+    fill_var = temporal_date,
+    facet_var = indicator_sd)
+
+
 # aantal starters	                                          bhstart
 # aandeel starters (%)                                  	  bhstart_p
 # aanbod winkels dagelijkse boodschappen (1-10)	            bhwinkelaanbod_r
@@ -346,102 +285,65 @@ data_nw_def |>
 # aandeel inwoners 27 - 65 meest kwetsbare positie (%)	    sk2765_kwets34_p
 # aandeel inwoners 65 + meest kwetsbare positie (%)	        sk66plus_kwets34_p
 # aandeel inwoners meest kwetsbare positie (%)	            skkwets34_p
-# 
 
 
-
-data_nw_def |>
-  filter(
-    spatial_type %in% c('gebieden', "stadsdelen", "gemeente"))|>
-  mutate(facet = case_when(
-    spatial_type %in% c("gebieden") ~ "gebieden",
-    TRUE                            ~ "stadsdeel en stad"))|>
-  my_line_plot("ihhink_gem", fct_rev(facet))
-
-	
-# lijn met uitkeringen 
-data_nw_def |>
-  filter(
-    spatial_type %in% c('gebieden', "stadsdelen", "gemeente"))|>
-  mutate(facet = case_when(
-    spatial_type %in% c("gebieden") ~ "gebieden",
-    TRUE                            ~ "stadsdeel en stad"))|>
-  my_line_plot("iwwb_p", fct_rev(facet))
-
-
-
-# lijn met uitkeringen 
-data_nw_def |>
-  filter(
-    spatial_type %in% c('gebieden', "stadsdelen", "gemeente"))|>
-  mutate(facet = case_when(
-    spatial_type %in% c("gebieden") ~ "gebieden",
-    TRUE                            ~ "stadsdeel en stad"))|>
-  my_line_plot("pwerklbbv", fct_rev(facet))
-
-
-data_nw_def |>
-  filter(value!=0)|>
-  mutate(value = case_when(
-    variabele == 'ihhink_gem' ~ value/1000,
-    TRUE ~ value))|>
-  my_kaart_plot( 
-    var = c("ihhink_gem","iwwb_p"),
-    geo = "buurten",
-    jaar =  NULL,
-    facet_var = fct_rev(indicator_sd))
-
-
-
-
-# bar met laag inkomen 
+# bar met minimahuishoudens
 data_nw_def |> 
+  mutate(
+    value= round(value))|>
   filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("iminhh130_p"), c("2020"), temporal_date)
+    spatial_type %in% c('gebieden', 'stadsdelen', 'gemeente'))|>
+  my_bar_plot(var = c("iminhh130_p"), 
+              jaar = c("2020"),
+              fill_var = variabele,
+              facet_var = temporal_date)
 
-# bar met kwetsbare minderjarigen
-data_nw_def |> 
-  filter(
-    spatial_name != 'Lutkemeer/Ookmeer',
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("sk017_kwets34_p"), c("2020"), temporal_date)
+
+kwetsb <- c(
+  #'kwetsbaar 0-17 (%)'  = "sk017_kwets34_p", 
+  #'kwetsbaar 18-26 (%)' = "sk1826_kwets34_p" , 
+  'kwetsbaar 27-65 (%)' = "sk2765_kwets34_p", 
+  'kwetsbaar 66+ (%)'   = "sk66plus_kwets34_p",
+  'kwetsbaar (%)'       = "skkwets34_p")
 
 
 data_nw_def |>
-  my_kaart_plot( 
-    var = c("bhstart","bhstart_p"),
-    geo = "buurten",
-    jaar =  NULL,
-    facet_var = fct_rev(indicator_sd))
-
-
-
-# bar rapportcijfer winkelaanbod
-data_nw_def |> 
+  mutate(indicator_sd=case_when(
+    
+    variabele == 'skkwets34_p'        ~ 'kwetsbaar (%)',
+    variabele == 'sk017_kwets34_p'    ~ 'kwetsbaar 0-17 (%)',
+    variabele == 'sk1826_kwets34_p'   ~ 'kwetsbaar 18-26 (%)',
+    variabele == 'sk2765_kwets34_p'   ~ 'kwetsbaar 27-65 (%)',
+    variabele == 'sk66plus_kwets34_p' ~ 'kwetsbaar 65+ (%)')
+    
+    )|>
   filter(
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("bhwinkelaanbod_r"), c("2019", "2021"), temporal_date)
+    tweedeling_def == 'totaal',
+    spatial_type %in% c('gebieden', 'stadsdelen', 'gemeente'))|>
+  my_bar_plot(
+    jaar = NULL,
+    var = kwetsb,
+    facet_var =  fct_relevel(indicator_sd, kwetsb ))
 
-# bar met kwetsbare minderjarigen
-data_nw_def |> 
-  filter(
-    spatial_name != 'Lutkemeer/Ookmeer',
-    spatial_type %in% c('wijken',  'stadsdelen', 'gemeente'))|>
-  my_bar_plot(c("sk017_kwets34_p"), c("2020"), temporal_date)
-
-
-
-
-
-
+breed  = 14
 hoog = 6
-# lijn met uitkeringen 
+
 data_nw_def |>
-  filter(
-    spatial_type %in% c('gebieden', "stadsdelen", "gemeente"))|>
-  mutate(facet = case_when(
-    spatial_type %in% c("gebieden") ~ "gebieden",
-    TRUE                            ~ "stadsdeel en stad"))|>
-  my_line_plot("vveiligvoelen_p", fct_rev(facet))
+  mutate(indicator_sd=case_when(
+    variabele == 'skkwets34_p'        ~ 'kwetsbaar (%)',
+    variabele == 'sk017_kwets34_p'    ~ 'kwetsbaar 0-17 (%)',
+    variabele == 'sk1826_kwets34_p'   ~ 'kwetsbaar 18-26 (%)',
+    variabele == 'sk2765_kwets34_p'   ~ 'kwetsbaar 27-65 (%)',
+    variabele == 'sk66plus_kwets34_p' ~ 'kwetsbaar 65+ (%)')
+  )|>
+  my_kaart_plot(
+    var  = kwetsb,
+    geo  = "wijken", 
+    afr  = 1,  
+    jaar = NULL,
+    facet_var = fct_relevel(indicator_sd, kwetsb )
+    )
+
+
+
 

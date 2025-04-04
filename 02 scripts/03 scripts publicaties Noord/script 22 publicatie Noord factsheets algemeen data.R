@@ -12,7 +12,7 @@ data_noord_ruw <- read_rds("03 tussentijds/BBGA_data_noord.rds")
 # lijstje met kernindicatoren
 kernindicatoren<- data_noord_ruw |>
   ungroup()|>
-  filter(kernindicator_noord ==TRUE) |>
+  filter(kernindicator_noord == TRUE) |>
   select(variabele)|>
   distinct()|>
   pull()
@@ -23,6 +23,7 @@ kernind_df<- data_noord_ruw |>
   select(variabele, thema_noord_eenmeting)|>
   distinct()
 
+### dit is de dataset met alleen data op niveau focusbuurten ---
 data_noord_def <- data_noord_ruw |>
   filter(
     !is.na(value),
@@ -62,7 +63,7 @@ my_temporal_filter <- function(x) {
     filter(
       temporal_date == max(temporal_date) | 
         
-        if      (2020 %in% temporal_date) {
+        if (2020 %in% temporal_date) {
           temporal_date == 2020 
           
         } else if (2021 %in% temporal_date) {
@@ -129,8 +130,8 @@ wb_noord <- my_style_sheet(
 )
 
 # Save the workbook to a file
-saveWorkbook(wb_noord, glue::glue("04 tabellen/02 tabellen noord/tabel eenmeting { naam_focusgebied } nov 2024.xlsx"), overwrite = TRUE)
-saveWorkbook(wb_noord, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel eenmeting { naam_focusgebied } nov 2024.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_noord, glue::glue("04 tabellen/02 tabellen noord/tabel eenmeting { naam_focusgebied } { datum_vandaag }.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_noord, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel eenmeting { naam_focusgebied } { datum_vandaag }.xlsx"), overwrite = TRUE)
 
 
 

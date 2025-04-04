@@ -206,7 +206,6 @@ write.xlsx(bind_rows(df_jeugdhulp_def, df_jeugdhulp_17), "00 ruwe data/niet in b
 
 df_secm <- read.xlsx("00 ruwe data/ruw input 10 2024/mpzo_secm.xlsx")|>
   rename(
-    value = waarde,
     tweedeling = tweedeling_sd)|>
   select(all_of(bbga_kol))
 

@@ -6,9 +6,10 @@ library(openxlsx)
 
 source("http://gitlab.com/os-amsterdam/tools-onderzoek-en-statistiek/-/raw/main/R/load_all.R")
 
-## stap 1. inlezen BBGA ---
+############################
+### stap 1. inlezen BBGA ---
+############################
 
-#pad <- "G:/OIS/Basisbestanden/basisstatistiekbestand/NU op de OIS-site/onderzoek.amsterdam.nl/"
 
 pad <- "../OS 24 BBGA UPDATE 10 2024/data/04 0 publicatie BBGA bestanden/DEF okt 24"
 
@@ -16,13 +17,18 @@ pad <- "../OS 24 BBGA UPDATE 10 2024/data/04 0 publicatie BBGA bestanden/DEF okt
 BBGA_data <- read.csv2(glue::glue("{pad}/bbga_latest_and_greatest.csv")) |>
   janitor::clean_names()|>
   mutate(variabele = str_to_lower(variabele)) |>
+  
+  # herschrijf naar statistiek_hub format
   rename(
     spatial_code  = gebiedcode15,
     temporal_date = jaar,
     value = waarde)|>
   add_column(
     spatial_date = '20220324') |>
-  mutate(spatial_code = replace_na(spatial_code , "NA"))
+  mutate(
+    spatial_code = replace_na(spatial_code , "NA")
+    )  # los het probleem op met NA Oostzaan
+
 
 # inlezen META data
 BBGA_meta <- read.csv(glue::glue("{pad}/metadata_latest_and_greatest.csv"))|>
@@ -31,21 +37,23 @@ BBGA_meta <- read.csv(glue::glue("{pad}/metadata_latest_and_greatest.csv"))|>
   select(variabele, thema, label) |>
   set_names(c("variabele", "thema_bbga", "label_bbga"))
 
-
-### stap 2 inlezen indicatoren ---
+#################################################
+### stap 2 inlezen indicatoren uit input xlsx ---
+#################################################
 
 # inlezen basislijst met indicatoren
 tabel_ind <- read.xlsx("01 indicatoren/Totaaloverzicht focusgebieden Amsterdam INPUT.xlsx") |>
   janitor::clean_names()|>
   mutate(variabele = str_to_lower(variabele))|>
   select(-c(bronhouder, opmerking))
-  
 
 # selecteer indicatoren uit basislijst die ook in BBGA staan
 tabel_ind_bbga <- tabel_ind |>
   filter(bbga == TRUE)
 
+######################################################
 ### stap 3 koppelen BBGA-indicatoren aan BBGA-data ---
+######################################################
 
 BBGA_data_def <- BBGA_data |>
   
@@ -55,37 +63,37 @@ BBGA_data_def <- BBGA_data |>
   # verwijder de BBGA indicatoren die niet in basislijst (input) staan 
   filter(aanpak_noord == TRUE | mpzo == TRUE | nplv == TRUE | basis == TRUE | samen_nw == TRUE)
 
-
-
-
 # koppel de meta-data aan bestand en voeg een kolom tweedeling_def toe 
 data_wel_bbga <- BBGA_data_def |>
   left_join(BBGA_meta, "variabele")|>
   mutate(temporal_date = as.character(temporal_date)) |>
-  add_column(tweedeling_def = 'totaal')
+  add_column(tweedeling_def = 'totaal')  # als tweedeling_def ontbreekt dan wordt de waarde 'totaal'
 
-### stap 5 toevoegen data die niet in BBGA staat ---
+####################################################
+### stap 4 toevoegen data die NIET in BBGA staat ---
+####################################################
 
 # van sommige vars staat het totaal in BBGA en de tweedeling in de map 'niet-bbga'
-# gezondheidsindicatoren zijn handmatig voor wijken en buurten aangevuld
-#   nb wordt niet meer aangevuld door GGD !!!
+# gezondheidsindicatoren zijn handmatig voor wijken en buurten aangevuld; aanvulling gaat moeizaam
 # veiligheidsindexcijfers staan in BBGA maar niet op stadsdeelniveau
-# in data_bijstand stond tweedeling_sd : dit is handmatig aangepast naar tweedeling
-# minimahuishoudens staan tot 2021 in BBGA (handmatig toegevoegd tot 2022)
 
+# deze variabelen staan ook in BBGA, maar verkeerd en worden uit andere csv's gehaald
 uitzondering <- c(
-  "sruit4_p", "pinzetbrt_p", "pinform_p", "wzbeweeg_p", "wzdepr_p" , "wzzwaar_p", "wzgezond_p",
-  "v_onvbeleving_i","v_personovl_i","v_vermijd_i","v_verloed_i","v_slacht_i","v_gercrim_i",
-  "iminjong130_p", "iminhh130_p"
+  "sruit4_p", "pinzetbrt_p", "pinform_p", 
+  "wzbeweeg_p", "wzdepr_p", "wzzwaar_p", 
+  "wzgezond_p", "v_onvbeleving_i", "v_personovl_i",
+  "v_vermijd_i", "v_verloed_i", "v_slacht_i",
+  "v_gercrim_i", "iminjong130_p", "iminhh130_p"
   )
 
+# selecteer indicatoren uit basislijst die NIET in BBGA staan
 tabel_ind_niet_bbga <- tabel_ind |>
   filter(bbga == FALSE | variabele %in% uitzondering)
 
-# inlezen data die niet in BBGA staat
+# inlezen datasets die niet in BBGA staat
 temp <- list.files("00 ruwe data/niet in bbga",full.names = T)
 
-
+# herschrijf alle kolomnamen naar het juiste statistiek_hub format
 my_mutate <- function(x){
   
   vars <- c("measure", "spatial_type", "spatial_code", 
@@ -96,8 +104,7 @@ my_mutate <- function(x){
     mutate(across(everything(), as.character))|>
     select(any_of(vars)) |>
     rename(variabele = measure)|>
-    mutate(
-      variabele = str_to_lower(variabele))
+    mutate(variabele = str_to_lower(variabele))
 }
 
 
@@ -124,21 +131,11 @@ my_replace_na <-  function(x) {
           TRUE                                                                        ~ spatial_code)
       )  
     
-    
-    
-    
-    
   }
-  
-  
-
-  
-  
-  
-  
   
   } 
 
+# purrr treintje
 data_niet_bbga <- temp |>
   map(\(x) read.xlsx(x))|>
   map(\(x) my_mutate(x))|>
@@ -158,7 +155,7 @@ data_niet_bbga <- temp |>
     TRUE                                        ~ tweedeling)
   )
 
-# toevoegen juiste gebiedsindeling -
+# script met dat alle gebiedsindelingen van Bas in een list plaatst 
 source("02 scripts/01 scripts bewerking data/script 00 basis gebiedsindelingen.R")
 
 # koppelen data bbga en data niet bbga
@@ -204,13 +201,10 @@ data_def <- bind_rows(data_niet_bbga, data_wel_bbga) |>
     value=as.numeric(value)) |>
   
   filter(
-    !is.na(spatial_name),
-    temporal_date %in% c(2017:2024))
+    !is.na(spatial_name))
 
 ### in dit script worden specieke berekeningen gedaan ---
 source("02 scripts/01 scripts bewerking data/script 01 basis extra berekeningen.R")
-
-
 
 
 # extra komt uit script 'extra berekeningen'
@@ -240,3 +234,7 @@ data_def2 <- bind_rows(data_def, extra) |>
 ### data_def2 ### wordt gebruikt voor de verwerking naar afzonderlijke datasets voor Zuidoost, Noord en NW
 ######################################################################################################
 
+### toevoegen winkelgebieden
+
+
+write_rds(data_def2, "03 tussentijds/data_def2.rds")

@@ -1,7 +1,9 @@
 
 ### SELECTIE DATA ZUIDOOST ---
 
-source("02 scripts/01 scripts bewerking data/script 02 basis opbouw basisset.R")
+
+
+data_def2 <- read_rds("03 tussentijds/data_def2.rds")
 
 winkelgebieden <- read.csv("01 indicatoren/winkelgebied_stadsdeel.csv")
 
@@ -82,8 +84,8 @@ wb_zuidoost <- my_style_sheet(
   
 )
 
-saveWorkbook(wb_zuidoost, glue::glue("04 tabellen/01 tabellen zuidoost/tabel alle data { naam_focusgebied } nov 2024.xlsx"), overwrite = T)
-saveWorkbook(wb_zuidoost, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel alle data { naam_focusgebied } nov 2024.xlsx"), overwrite = T)
+saveWorkbook(wb_zuidoost, glue::glue("04 tabellen/01 tabellen zuidoost/tabel alle data { naam_focusgebied } { datum_vandaag }.xlsx"), overwrite = T)
+saveWorkbook(wb_zuidoost, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel alle data { naam_focusgebied } { datum_vandaag }.xlsx"), overwrite = T)
 
 
 

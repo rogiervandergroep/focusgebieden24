@@ -140,8 +140,8 @@ wb_zuidoost<- my_style_sheet(
 )
 
 # Save the workbook to a file
-saveWorkbook(wb_zuidoost, glue::glue("04 tabellen/01 tabellen zuidoost/tabel eenmeting { naam_focusgebied } nov 2024.xlsx"), overwrite = TRUE)
-saveWorkbook(wb_zuidoost, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel eenmeting { naam_focusgebied } nov 2024.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_zuidoost, glue::glue("04 tabellen/01 tabellen zuidoost/tabel eenmeting { naam_focusgebied } { datum_vandaag }.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_zuidoost, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel eenmeting { naam_focusgebied } { datum_vandaag }.xlsx"), overwrite = TRUE)
 
 ### tabel op gebied-niveau ---
 
@@ -210,7 +210,51 @@ wb_geb_zuidoost<- my_style_sheet(
 )
 
 # Save the workbook to a file
-saveWorkbook(wb_geb_zuidoost, glue::glue("04 tabellen/01 tabellen zuidoost/tabel eenmeting { naam_focusgebied } gebieden nov 2024.xlsx"), overwrite = TRUE)
-saveWorkbook(wb_geb_zuidoost, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel eenmeting { naam_focusgebied } gebieden nov 2024.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_geb_zuidoost, glue::glue("04 tabellen/01 tabellen zuidoost/tabel eenmeting { naam_focusgebied } gebieden { datum_vandaag }.xlsx"), overwrite = TRUE)
+saveWorkbook(wb_geb_zuidoost, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel eenmeting { naam_focusgebied } gebieden { datum_vandaag }.xlsx"), overwrite = TRUE)
 
+###################################################
+# tabel op gebiedsniveau alleen stellingen zuidoost in thema 
+###################################################
+
+sd_enq_vars <- c(
+  "berinzoov_p",  "bervnzofiets_p", "bervnzoov_p","mwzogobeh_p","mwzoprbrt_p",
+  "mwzoeerl_p","meemij_p","invplsd_p","menontwsd_p","menontwbrt_p","zoinwvc_p",
+  "zoinwngnl_p","zoinwngns_p","zoinwfb_p","zoinwvsv_p","kcbrtmooi_p","kcverbbew_p",
+  "kcgrlfw_p","mwzoluist_p","tprburen_p","tprfinan_p","tprpjurid_p","tprgezond_p",
+  "tprwoning_p","tpronvstr_p","tprovstr_p","kctonten_p","kcstraat_p","acczo_p")
+
+
+# dit zijn de variabelen van de stadsdeel-enquete van hoofdstuk 1
+
+
+tabel_geb_eenmeting <- data_zo_def |>
+  
+  filter(
+    variabele %in% sd_enq_vars,
+    !is.na(thema_zuidoost_label),
+    spatial_type %in% c("gebieden", "stadsdelen")
+
+    )|>
+  
+  mutate(spatial_name = case_when(
+    spatial_name == 'Bijlmer Centrum'       ~ 'Bijlmer-Centrum',
+    spatial_name == 'Bijlmer Oost'          ~ 'Bijlmer-Oost',
+    spatial_name == 'Gaasperdam / Driemond' ~ 'Gaasperdam',
+    TRUE ~  spatial_name)
+    )|>
+  ungroup()|>
+  select(-c(
+    "variabele",  "kernindicator_zo", 
+    "thema_zuidoost_code", "spatial_code", "spatial_type", "temporal_date")
+  )|>
+  pivot_wider(
+    values_from = value,
+    names_from = c("tweedeling_def", "spatial_name" ),
+    names_sep = " ")
+
+# Save the workbook to a file
+write.xlsx(
+  tabel_geb_eenmeting, 
+  "04 tabellen/01 tabellen zuidoost/tabel eenmeting_enquete_zo.xlsx", overwrite = TRUE)
 

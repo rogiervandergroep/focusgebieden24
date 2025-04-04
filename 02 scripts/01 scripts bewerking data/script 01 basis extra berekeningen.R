@@ -3,24 +3,41 @@
 ### extra berekeningen ---
 ##########################
 
+# met dit script worden extra indicatoren toegevoegd. Vaak gaat het om aandelen op basis van bestaande indicatoren. 
+# In de functie geef je aan welke twee variabelen er toegevoegd worden en hoe de nieuwe variabele heet
+# er zijn groeicijfers; percentages; dichtheden
+
+
+# my_berekening<- function (x, berekening, teller, noemer, newvar) {
+#   
+#      
+#   y <- x |>
+#     filter(
+#       variabele %in% c('bhvest'))|>
+#     select(all_of(var_sel))|>
+#     group_by(
+#       spatial_code, spatial_name)|>
+#     arrange(temporal_date )
+#   
+#   if (berekening = 'groeicijfer') {
+#     
+#     mutate(
+#       value = value/first(value)*100)|>
+#     
+#   }
+#     
+#     select(-variabele)|>
+#     add_column(variabele = 'bhvest_groei')|>
+#     left_join(tabel_ind, by="variabele")
+#   
+#   
+# }
+
 var_sel<- c("spatial_code", "spatial_name", "spatial_type", "temporal_date", "variabele", "value")
 
 extra  <- bind_rows(
   
-  # berekening boomkronen oppervlakte
-  data_def|>
-    filter(
-      variabele %in% c('orland', 'opp_boomkroon_publiek_ha'),
-      temporal_date == '2023')|>
-    select(all_of(var_sel))|>
-    pivot_wider(
-      values_from = value, 
-      names_from = variabele)|>
-    mutate(
-      value = (opp_boomkroon_publiek_ha/orland)*100)|>
-    add_column(variabele = 'opp_boomkroon_publiek_p') |>
-    left_join(tabel_ind, by="variabele") |>
-    select(-(c("opp_boomkroon_publiek_ha", "orland"))),
+
   
  
   # berekening groei vestigingen
@@ -37,12 +54,26 @@ extra  <- bind_rows(
     add_column(variabele = 'bhvest_groei')|>
     left_join(tabel_ind, by="variabele"),
   
+  
+  data_def|>
+    filter(
+      variabele %in% c('orntrgroen', 'opp_publieke_ruimte_land_ha')
+      )|>
+    select(all_of(var_sel))|>
+    pivot_wider(
+      values_from = value, 
+      names_from = variabele)|>
+    mutate(
+      value = (orntrgroen/opp_publieke_ruimte_land_ha)*100)|>
+    add_column(variabele = 'orntrgroen_p')|>
+    left_join(tabel_ind, by="variabele")  |>
+    select(-(c("orntrgroen", "opp_publieke_ruimte_land_ha"))),
+  
 
   # berekening publiekelijk groen per 1000 inwoners
   data_def|>
     filter(
-      variabele %in% c('orpubgroen', 'bevtotaal'),
-      temporal_date == '2023')|>
+      variabele %in% c('orpubgroen', 'bevtotaal'))|>
     select(all_of(var_sel))|>
     pivot_wider(
       values_from = value, 

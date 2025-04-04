@@ -3,12 +3,19 @@ library(tidyverse)
 
 ### SELECTIE DATA NIEUW-WEST ---
 
-source("02 scripts/01 scripts bewerking data/script 02 basis opbouw basisset.R")
+data_def2 <- read_rds("03 tussentijds/data_def2.rds")
 
-# wellicht komt hier nog een lijst met aandachtbuurten
+# lijst met aandachtbuurten
 aanpak_nw_buurten <- read.xlsx("01 indicatoren/overzicht focusbuurten noord en nieuwwest.xlsx")|>
   filter(stadsdeel == 'Nieuw-West')|>
   select(spatial_code, focusbuurt)
+
+winkelgebieden <- read.csv("01 indicatoren/winkelgebied_stadsdeel.csv")
+
+wg_nieuwwest <- winkelgebieden |>
+  filter(code.1 == "F") |>
+  select(code)|>
+  pull()
 
 # toevoegen inwoneraantal
 df_inwoner_brt <- data_def2 |>
@@ -30,7 +37,7 @@ BBGA_data_nw <- data_def2 |>
   filter(  
     str_detect(spatial_code, "^F") | 
     str_detect(spatial_code, "^GF") |
-    spatial_code %in% c("STAD", "0363"),
+    spatial_code %in% c("STAD", "0363", wg_nieuwwest),
     samen_nw == TRUE | basis == TRUE
     )|>
   select(
@@ -146,8 +153,8 @@ wb_nw <- my_style_sheet(
   
 )
 
-saveWorkbook(wb_nw, glue::glue("04 tabellen/03 tabellen nieuwwest/tabel alle data { naam_focusgebied } nov 2024.xlsx"), overwrite = T)
-saveWorkbook(wb_nw, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel alle data { naam_focusgebied } nov 2024.xlsx"), overwrite = T)
+saveWorkbook(wb_nw, glue::glue("04 tabellen/03 tabellen nieuwwest/tabel alle data { naam_focusgebied } { datum_vandaag }.xlsx"), overwrite = T)
+saveWorkbook(wb_nw, glue::glue("04 tabellen/05 tabellen website focusgebieden/tabel alle data { naam_focusgebied } { datum_vandaag }.xlsx"), overwrite = T)
 
 
 

@@ -252,6 +252,7 @@ my_style_sheet <- function (x, col_dark_bl, col_light_bl, colofon_type) {
 }
 
 
+datum_vandaag <- format(as.Date(Sys.Date()), "%Y_%m")
 
 
 
