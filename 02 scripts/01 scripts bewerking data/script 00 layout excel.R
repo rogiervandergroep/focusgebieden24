@@ -187,7 +187,8 @@ my_style_sheet <- function (x, col_dark_bl, col_light_bl, colofon_type) {
     # basisstijl
     addStyle(wb, sheet_name, style$data_base, rows = 1:(nrow(x[[i]])+1), cols = 1:ncol(x[[i]]),gridExpand = TRUE)
     
-    # maak de rijen met kernindicatoren bol
+    # maak de rijen met kernindicatoren bold
+    
     addStyle(wb, sheet_name, style$data_bold, rows = which(str_detect(x[[i]][['naam indicator']], 'kernindicator')) + 1, cols = 1:ncol(x[[i]]), gridExpand = T)
     
     # selecteer de kolommen die lichtblauw moeten zijn (met zwarte tekst)

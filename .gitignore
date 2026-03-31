@@ -10,6 +10,7 @@
 .Ruserdata
 
 # databestanden
+assets/
 00 ruwe data/
 01 indicatoren/
 03 tussentijds/
@@ -27,6 +28,8 @@
 
 # excel files
 /*.xlsx
+
+
 
 
 # RStudio files
