@@ -35,6 +35,7 @@ var_sel <- c(
   "spatial_code",
   "spatial_name",
   "spatial_type",
+  "spatial_date",
   "temporal_date",
   "measure",
   "value"
@@ -59,38 +60,38 @@ extra <- bind_rows(
     add_column(measure = 'bhvest_groei') |>
     left_join(tabel_ind, by = "measure"),
 
-  data_def |>
-    filter(
-      measure %in% c('orntrgroen', 'orpubland')
-    ) |>
-    select(all_of(var_sel)) |>
-    pivot_wider(
-      values_from = value,
-      names_from = measure
-    ) |>
-    mutate(
-      value = (orntrgroen / orpubland) * 100
-    ) |>
-    add_column(measure = 'orntrgroen_p') |>
-    left_join(tabel_ind, by = "measure") |>
-    select(-(c("orntrgroen", "orpubland"))),
+  # data_def |>
+  #   filter(
+  #     measure %in% c('orntrgroen', 'orpubland')
+  #   ) |>
+  #   select(all_of(var_sel)) |>
+  #   pivot_wider(
+  #     values_from = value,
+  #     names_from = measure
+  #   ) |>
+  #   mutate(
+  #     value = (orntrgroen / orpubland) * 100
+  #   ) |>
+  #   add_column(measure = 'orntrgroen_p') |>
+  #   left_join(tabel_ind, by = "measure") |>
+  #   select(-(c("orntrgroen", "orpubland"))),
 
   # berekening publiekelijk groen per 1000 inwoners
-  data_def |>
-    filter(
-      measure %in% c('orpubgroen', 'bevtotaal')
-    ) |>
-    select(all_of(var_sel)) |>
-    pivot_wider(
-      values_from = value,
-      names_from = measure
-    ) |>
-    mutate(
-      value = (orpubgroen / bevtotaal) * 1000
-    ) |>
-    add_column(measure = 'orpubgroen_inw') |>
-    left_join(tabel_ind, by = "measure") |>
-    select(-(c("orpubgroen", "bevtotaal"))),
+  # data_def |>
+  #   filter(
+  #     measure %in% c('orpubgroen', 'bevtotaal')
+  #   ) |>
+  #   select(all_of(var_sel)) |>
+  #   pivot_wider(
+  #     values_from = value,
+  #     names_from = measure
+  #   ) |>
+  #   mutate(
+  #     value = (orpubgroen / bevtotaal) * 1000
+  #   ) |>
+  #   add_column(measure = 'orpubgroen_inw') |>
+  #   left_join(tabel_ind, by = "measure") |>
+  #   select(-(c("orpubgroen", "bevtotaal"))),
 
   # bevolkingsgroei
   data_def |>
@@ -143,7 +144,7 @@ extra <- bind_rows(
     ) |>
     add_column(measure = 'bhstart_oph') |>
     left_join(tabel_ind, by = "measure") |>
-    select(-(c("bhstart_vest", "bhophef_vest"))),
+    select(-(c("bhstart_vest", "bhophef_vest", "bhvest"))),
 
   # berekening aandeel STARTERS
   data_def |>
@@ -158,7 +159,7 @@ extra <- bind_rows(
     mutate(
       value = (bhstart_vest / bhvest) * 100
     ) |>
-    add_column(measure = 'bhstart_vest_p') |>
+    add_column(measure = 'bhstart_tot_p') |>
     left_join(tabel_ind, by = "measure") |>
     select(-(c("bhstart_vest", "bhvest"))),
 
@@ -178,23 +179,27 @@ extra <- bind_rows(
     ) |>
     add_column(measure = 'startkwal_zonder_p') |>
     left_join(tabel_ind, by = "measure") |>
-    select(-(c("startkwalificatie_p"))),
+    select(-(c("startkwalificatie_p")))
 
   # berekening aandeel werkzame personen in CI
-  data_def |>
-    filter(
-      measure %in% c('bhwp_ci', 'bhwp')
-    ) |>
-    select(all_of(var_sel)) |>
-    pivot_wider(
-      values_from = value,
-      names_from = measure
-    ) |>
-    mutate(
-      value = (bhwp_ci / bhwp) * 100
-    ) |>
-    add_column(measure = 'bhwp_ci_p') |>
-    left_join(tabel_ind, by = "measure") |>
-    select(-(c("bhwp_ci", "bhwp")))
+  # data_def |>
+  #   filter(
+  #     measure %in% c('bhwp_ci', 'bhwp')
+  #   ) |>
+  #   select(all_of(var_sel)) |>
+  #   pivot_wider(
+  #     values_from = value,
+  #     names_from = measure
+  #   ) |>
+  #   mutate(
+  #     value = (bhwp_ci / bhwp) * 100
+  #   ) |>
+  #   add_column(measure = 'bhwp_ci_p') |>
+  #   left_join(tabel_ind, by = "measure") |>
+  #   select(-(c("bhwp_ci", "bhwp")))
 ) |>
-  add_column(tweedeling_def = 'totaal')
+  add_column(tweedeling_def = 'totaal') |>
+  select(-c(thema_zuidoost, thema_noord, thema_zuidoost_nulmeting)) # deze zijn vervangen door nieuwe namen
+
+## zuidoost_label vervangt thema_zuidoost
+## noord_eenmeting vervangt thema_noord

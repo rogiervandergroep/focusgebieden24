@@ -4,53 +4,71 @@
 library(tidyverse)
 library(openxlsx)
 
-source(
-  "http://gitlab.com/os-amsterdam/tools-onderzoek-en-statistiek/-/raw/main/R/load_all.R"
+# source(
+#   "http://gitlab.com/os-amsterdam/tools-onderzoek-en-statistiek/-/raw/main/R/load_all.R"
+# )
+
+############################
+### stap 1. inlezen Statistiekhub ---
+############################
+
+# inlezen Statistiekhub: gedownload van
+# https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#cijfers
+
+# https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#cijfers
+Statistiekhub_raw <- readr::read_csv(
+  "https://acc.api.data.amsterdam.nl/v1/statistieken/v2/cijfers?_format=csv"
 )
 
-############################
-### stap 1. inlezen BBGA ---
-############################
+# https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#indicatoren
+Statistiekhub_meta <- readr::read_csv(
+  "https://acc.api.data.amsterdam.nl/v1/statistieken/v2/indicatoren?_format=csv"
+)
 
-# pad <- "../OS 24 BBGA UPDATE 10 2024/data/04 0 publicatie BBGA bestanden/DEF okt 24"
+# https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#kengetallen
+Statistiekhub_kengetallen <- readr::read_csv(
+  "https://acc.api.data.amsterdam.nl/v1/statistieken/v2/kengetallen?_format=csv"
+)
 
-# inlezen BBGA
-BBGA_data <- read.csv("00 ruwe data/bbga_data.csv")
+
+Statistiekhub_data <- Statistiekhub_raw |>
+  select(
+    gebiedType,
+    gebiedCode,
+    begindatum,
+    indicatorId,
+    waarde
+  )
 
 # inlezen META data
-BBGA_meta <- read.csv("00 ruwe data/bbga_meta.csv")
+Statistiekhub_meta <- read.csv(
+  "00 ruwe data/statistieken_v2_indicatoren_openbaar.csv"
+) |>
+  select(Id, Naam)
 
 # opschonen data
-BBGA_data_clean <- BBGA_data |>
-  janitor::clean_names() |>
-  mutate(
-    measure = str_to_lower(measure),
-    spatial_code = replace_na(spatialdimensioncode, "NA")
-  ) |>
+Statistiekhub_data_clean <- Statistiekhub_data |>
+  left_join(Statistiekhub_meta, by = c("indicatorId" = "Id")) |>
   rename(
-    spatial_type = spatialdimensiontype,
-    spatial_date = spatialdimensiondate,
-    temporal_type = temporaldimensiontype,
-    temporal_date = temporaldimensionstartdate
+    measure = Naam,
+    value = waarde,
+    spatial_type = gebiedType,
+    spatial_code = gebiedCode,
+    temporal_date = begindatum
   ) |>
-  select(
-    measure,
-    spatial_code,
-    spatial_type,
-    temporal_type,
-    temporal_date,
-    value
+  mutate(
+    spatial_code = replace_na(spatial_code, "NA")
   ) |>
-  mutate(temporal_date = lubridate::as_date(temporal_date)) |>
-  filter(temporal_date > lubridate::ymd("20180101"))
+  filter(temporal_date > lubridate::ymd("2018-01-01")) |>
+  mutate(measure = str_to_lower(measure))
 
 
 # opschonen meta data
-BBGA_meta_clean <- BBGA_meta |>
-  janitor::clean_names() |>
-  mutate(measure = str_to_lower(name)) |>
-  select(measure, theme, label) |>
-  set_names(c("measure", "thema_bbga", "label_bbga"))
+# Statistiekhub_meta_clean <- Statistiekhub_meta |>
+#   janitor::clean_names() |>
+#   mutate(measure = str_to_lower(name)) |>
+#   select(measure, theme, label) |>
+#   set_names(c("measure", "thema_Statistiekhub", "label_Statistiekhub"))
 
 #################################################
 ### stap 2 inlezen indicatoren uit input xlsx ---
@@ -58,7 +76,8 @@ BBGA_meta_clean <- BBGA_meta |>
 
 # inlezen basislijst met indicatoren
 tabel_ind <- read.xlsx(
-  "01 indicatoren/Totaaloverzicht focusgebieden Amsterdam INPUT.xlsx"
+  "01 indicatoren/Totaaloverzicht focusgebieden Amsterdam INPUT.xlsx",
+  sheet = "ind_26"
 ) |>
   janitor::clean_names() |>
   mutate(measure = str_to_lower(variabele)) |>
@@ -73,43 +92,46 @@ tabel_ind <- read.xlsx(
   ) |>
   select(indicator_sd, measure, everything())
 
-# selecteer indicatoren uit basislijst die ook in BBGA staan
-tabel_ind_bbga <- tabel_ind |>
+# selecteer indicatoren uit basislijst die ook in Statistiekhub staan
+tabel_ind_Statistiekhub <- tabel_ind |>
   filter(bbga == TRUE)
 
 ######################################################
-### stap 3 koppelen BBGA-indicatoren aan BBGA-data ---
+### stap 3 koppelen Statistiekhub-indicatoren aan Statistiekhub-data ---
 ######################################################
 
-BBGA_data_def <- BBGA_data_clean |>
+Statistiekhub_data_def <- Statistiekhub_data_clean |>
 
-  # koppel basislijst (input) aan lijst met alle BBGA-indicatoren
-  left_join(tabel_ind_bbga, by = "measure") |>
+  # koppel basislijst (input) aan lijst met alle Statistiekhub-indicatoren
+  left_join(tabel_ind_Statistiekhub, by = "measure") |>
 
-  # verwijder de BBGA indicatoren die niet in basislijst (input) staan
+  # verwijder de Statistiekhub indicatoren die niet in basislijst (input) staan
+
+  # aanpassing 2026: omdat er een nieuwe nplv dataset is, worden de oude indicatoren die alleen NPLV zijn verwijderd
+
   filter(
     aanpak_noord == TRUE |
       mpzo == TRUE |
-      nplv == TRUE |
+      # nplv == TRUE | bestaat niet meer
       basis == TRUE |
       samen_nw == TRUE
   )
 
 # koppel de meta-data aan bestand en voeg een kolom tweedeling_def toe
-data_wel_bbga <- BBGA_data_def |>
-  left_join(BBGA_meta_clean, "measure") |>
+data_wel_Statistiekhub <- Statistiekhub_data_def |>
+  # left_join(Statistiekhub_meta_clean, "measure") |>
   mutate(temporal_date = as.character(temporal_date)) |>
   add_column(tweedeling_def = 'totaal') # als tweedeling_def ontbreekt dan wordt de waarde 'totaal'
 
 ####################################################
-### stap 4 toevoegen data die NIET in BBGA staat ---
+### stap 4 toevoegen data die NIET in Statistiekhub staat ---
 ####################################################
 
-# van sommige vars staat het totaal in BBGA en de tweedeling in de map 'niet-bbga'
+# van sommige vars staat het totaal in Statistiekhub en de tweedeling in de map 'niet-Statistiekhub'
 # gezondheidsindicatoren zijn handmatig voor wijken en buurten aangevuld; aanvulling gaat moeizaam
-# veiligheidsindexcijfers staan in BBGA maar niet op stadsdeelniveau
+# veiligheidsindexcijfers staan in Statistiekhub maar niet op stadsdeelniveau
 
-# deze variabelen staan ook in BBGA, maar verkeerd en worden uit andere csv's gehaald
+# deze variabelen staan ook in Statistiekhub, maar worden uit andere csv's gehaald want opnieuw berekend met tweedeling
 uitzondering <- c(
   "sruit4_p",
   "pinzetbrt_p",
@@ -117,22 +139,22 @@ uitzondering <- c(
   "wzbeweeg_p",
   "wzdepr_p",
   "wzzwaar_p",
-  "wzgezond_p",
-  "v_onvbeleving_i",
-  "v_personovl_i",
-  "v_vermijd_i",
-  "v_verloed_i",
-  "v_slacht_i",
-  "v_gercrim_i",
-  "iminjong130_p",
-  "iminhh130_p"
+  "wzgezond_p"
+  # "v_onvbeleving_i", staan sinds 2026 niet meer in Statistiekhub > veiligheid in beeld
+  # "v_personovl_i", staan niet meer in Statistiekhub > veiligheid in beeld
+  # "v_vermijd_i", staan niet meer in Statistiekhub > veiligheid in beeld
+  # "v_verloed_i", staan niet meer in Statistiekhub > veiligheid in beeld
+  # "v_slacht_i", staan niet meer in Statistiekhub > veiligheid in beeld
+  # "v_gercrim_i", staan niet meer in Statistiekhub > veiligheid in beeld
+  # "iminjong130_p", staat nu wel in Statistiekhub
+  # "iminhh130_p" staat nu wel in Statistiekhub
 )
 
-# selecteer indicatoren uit basislijst die NIET in BBGA staan
-tabel_ind_niet_bbga <- tabel_ind |>
+# selecteer indicatoren uit basislijst die NIET in Statistiekhub staan
+tabel_ind_niet_Statistiekhub <- tabel_ind |>
   filter(bbga == FALSE | measure %in% uitzondering)
 
-# inlezen datasets die niet in BBGA staat
+# inlezen datasets die niet in Statistiekhub staat
 temp <- list.files("00 ruwe data/niet in bbga", full.names = T)
 
 # herschrijf alle kolomnamen naar het juiste statistiek_hub format
@@ -186,10 +208,10 @@ my_replace_na <- function(x) {
 }
 
 # purrr treintje
-data_niet_bbga <- temp |>
+data_niet_Statistiekhub <- temp |>
   map(\(x) read.xlsx(x)) |>
   map(\(x) my_mutate(x)) |>
-  map(\(x) left_join(x, tabel_ind_niet_bbga, by = "measure")) |>
+  map(\(x) left_join(x, tabel_ind_niet_Statistiekhub, by = "measure")) |>
   map_df(\(x) filter(x, !is.na(bbga))) |>
   my_replace_na() |>
   mutate(
@@ -204,15 +226,24 @@ data_niet_bbga <- temp |>
       str_detect(tweedeling, pattern = "kort") ~ "nieuwe bewoner",
       TRUE ~ tweedeling
     )
+  ) |>
+  mutate(
+    temporal_date = case_when(
+      temporal_date == '46023' ~ '20260101',
+      temporal_date == '45658' ~ '20250101',
+      temporal_date == '45292' ~ '20240101',
+      TRUE ~ temporal_date
+    )
   )
+
 
 # script met dat alle gebiedsindelingen van Bas in een list plaatst
 source(
   "02 scripts/01 scripts bewerking data/script 00 basis gebiedsindelingen.R"
 )
 
-# koppelen data bbga en data niet bbga
-data_def <- bind_rows(data_niet_bbga, data_wel_bbga) |>
+# koppelen data Statistiekhub en data niet Statistiekhub
+data_def <- bind_rows(data_niet_Statistiekhub, data_wel_Statistiekhub) |>
   select(-(c("spatial_type", "spatial_date"))) |>
 
   mutate(
@@ -232,6 +263,7 @@ data_def <- bind_rows(data_niet_bbga, data_wel_bbga) |>
   select(all_of(c(
     "indicator_sd",
     "measure",
+    "bron",
     "value",
     "temporal_date",
     "spatial_code",
@@ -246,15 +278,15 @@ data_def <- bind_rows(data_niet_bbga, data_wel_bbga) |>
     "thema_noord_eenmeting",
     "thema_nw_kleur",
     "thema_nw_label",
-    "thema_bbga",
-    "label_bbga",
-    "thema_nplv",
+    # "thema_Statistiekhub", (bestaat niet meer)
+    # "label_Statistiekhub", (bestaat niet meer)
+    # "thema_nplv", (bestaat niet meer sinds 2026)
 
     # booleans
     "mpzo",
     "aanpak_noord",
     "samen_nw",
-    "nplv",
+    # "nplv", (bestaat niet meer)
     "bbga",
     "basis",
 
@@ -284,7 +316,10 @@ source(
 
 
 # extra komt uit script 'extra berekeningen'
-data_def2 <- bind_rows(data_def, extra) |>
+data_def2 <- bind_rows(
+  data_def,
+  extra
+) |>
 
   mutate(
     spatial_type = factor(

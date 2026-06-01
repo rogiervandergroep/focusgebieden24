@@ -15,7 +15,10 @@ assets/
 01 indicatoren/
 03 tussentijds/
 04 tabellen/
+05 reports/
 10 rapporten/
+
+NPLV monitor overleg/*.*
 
 # Example code in package build process
 *-Ex.R
@@ -28,8 +31,9 @@ assets/
 
 # excel files
 /*.xlsx
-
-
+*.docx
+*.pdf
+/*.pdf
 
 
 # RStudio files
@@ -38,6 +42,8 @@ assets/
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
+
+
 
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth

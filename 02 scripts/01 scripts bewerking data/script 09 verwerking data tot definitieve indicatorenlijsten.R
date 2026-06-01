@@ -3,6 +3,45 @@ library(tidyverse)
 
 data_def2 <- read_rds("03 tussentijds/data_def2.rds")
 
+data_merel <- data_def2 |>
+  select(c(
+    "indicator_sd",
+    "measure",
+    "bron",
+    "value",
+    "temporal_date",
+    "spatial_code",
+    "spatial_name",
+    "spatial_type",
+    "tweedeling_def",
+    "thema_zuidoost_label",
+    "thema_noord_eenmeting",
+    "thema_nw_kleur",
+    "thema_nw_label",
+    "mpzo",
+    "aanpak_noord",
+    "samen_nw",
+    "kernindicator_zo",
+    "kernindicator_noord",
+    "kernindicator_nw",
+    "spatial_date",
+    "besch_jaren"
+  )) |>
+  filter(
+    kernindicator_zo == TRUE |
+      kernindicator_noord == TRUE |
+      kernindicator_nw == 'primair'
+  ) |>
+  mutate(
+    kernindicator_nw = case_when(
+      kernindicator_nw == 'primair' ~ TRUE,
+      kernindicator_nw == 'secundair' ~ FALSE
+    )
+  )
+
+write_csv(data_merel, "04 tabellen/data_meting2_jun_26.csv")
+
+
 tabel_ind <- read_rds("03 tussentijds/tabel_ind.rds")
 
 range <- data_def2 |>
@@ -72,7 +111,7 @@ write.xlsx(
 )
 # write.xlsx(tabelvoorupdates,  "overzicht inidcatoren tbv data_uitvraag.xlsx", withFilter=T, overwrite = T)
 
-tabel_ind_def_sel <- tabel_ind_def |>
+tabel_ind_def_sel <- tabel_ind_def2 |>
   select(
     indicator_sd,
     ind_onderdeel_van,
@@ -82,7 +121,7 @@ tabel_ind_def_sel <- tabel_ind_def |>
     kernindicator_noord,
     thema_nw_label,
     kernindicator_nw,
-    thema_nplv,
+
     besch_jaren,
     besch_tweedeling,
     besch_aggr_niveaus
@@ -90,7 +129,7 @@ tabel_ind_def_sel <- tabel_ind_def |>
   arrange(ind_onderdeel_van)
 
 
-tabel_okt_24 <- list(
+tabel_mei_26 <- list(
   ind_MPZO = tabel_ind_def_sel |>
     filter(!is.na(thema_zuidoost_label)) |>
     select(
@@ -122,12 +161,7 @@ tabel_okt_24 <- list(
       besch_jaren,
       besch_aggr_niveaus
     ) |>
-    arrange(thema_noord_eenmeting, desc(kernindicator_noord)),
-
-  ind_NPLV = tabel_ind_def_sel |>
-    filter(!is.na(thema_nplv)) |>
-    select(indicator_sd, thema_nplv, besch_jaren, besch_aggr_niveaus) |>
-    arrange(thema_nplv)
+    arrange(thema_noord_eenmeting, desc(kernindicator_noord))
 ) |>
   map(\(x) {
     rename(
@@ -148,16 +182,13 @@ Indicatorenoverzicht <- tibble(
     "",
     "ter ondersteuning van de outcome monitoring van",
     "het Masterplan Zuidoost, het Nationaal Programma Samen Nieuw-West en Aanpak Noord",
-    "Projectnummer: 24015",
     "",
-    "Eva Karacay",
-    "Marloes de Hoon",
     "Rogier van der Groep",
     "Ralph Rusconi",
     "",
     "onderzoek.amsterdam.nl",
     "rogier.van.der.groep@amsterdam.nl",
-    "Amsterdam, november 2024",
+    "Amsterdam, juni 2026",
     "",
     "In samenwerking met de allianties van Masterplan Zuidoost, Samen Nieuw-West en Aanpak Noord zijn verschillende indicatoren geselecteerd ter ondersteuning van de outcome monitoring in de drie focusgebieden in Zuidoost, Nieuw-West en Noord.",
     "Vanuit het Nationaal Programma Leefbaarheid en Veiligheid (NPLV) is een lijst met indicatoren voorgesteld en deze is door de allianties aangevuld.",
@@ -166,7 +197,6 @@ Indicatorenoverzicht <- tibble(
     "",
     "",
     "In dit Excelbestand wordt per tabblad en per focusgebied een overzicht gegeven van de geselecteerde indicatoren en de daarbij horende ambities en strategische doelen.",
-    "Ook is de lijst met indicatoren toegevoegd die is samengesteld door het NPLV.",
     "",
     "Inhoudsopgave",
     ""
@@ -174,7 +204,7 @@ Indicatorenoverzicht <- tibble(
 )
 
 
-inhoud <- tibble(Indicatorenoverzicht = names(tabel_okt_24)) |>
+inhoud <- tibble(Indicatorenoverzicht = names(tabel_mei_26)) |>
 
   mutate(
     Indicatorenoverzicht = case_when(
@@ -183,9 +213,7 @@ inhoud <- tibble(Indicatorenoverzicht = names(tabel_okt_24)) |>
       Indicatorenoverzicht ==
         'ind_SNW' ~ 'ind_SNW lijst met indicatoren voor Samen Nieuw-West',
       Indicatorenoverzicht ==
-        'ind_NOORD' ~ 'ind_NOORD lijst met indicatoren voor Aanpak Noord',
-      Indicatorenoverzicht ==
-        'ind_NPLV' ~ 'ind_NPLV lijst met indicatoren voor NPLV'
+        'ind_NOORD' ~ 'ind_NOORD lijst met indicatoren voor Aanpak Noord'
     )
   )
 
@@ -200,10 +228,10 @@ source("02 scripts/01 scripts bewerking data/script 00 layout excel.R")
 ## Create a new workbook
 wb <- createWorkbook()
 
-sheet_nr <- c(1:length(tabel_okt_24))
+sheet_nr <- c(1:length(tabel_mei_26))
 sheet_nr_plus1 <- length(sheet_nr) + 1
 
-tabel <- tabel_okt_24
+tabel <- tabel_mei_26
 
 # Loop through the list and add each element to a new sheet
 for (i in seq_along(tabel)) {
@@ -268,7 +296,7 @@ worksheetOrder(wb) <- c(sheet_nr_plus1, sheet_nr)
 ## Save workbook voor lijst indicatoren
 saveWorkbook(
   wb,
-  "04 tabellen/05 tabellen website focusgebieden/tabel overzicht indicatoren focusgebieden jan 25.xlsx",
+  "04 tabellen/05 tabellen website focusgebieden/tabel overzicht indicatoren focusgebieden jun 26.xlsx",
   overwrite = TRUE
 )
 
@@ -353,7 +381,7 @@ for (i in seq_along(tabel)) {
 ## Save workbook voor lijst indicatoren
 saveWorkbook(
   wb,
-  "10 rapporten/02 rapporten Zuidoost/mazo_bron.xlsx",
+  "10 rapporten/02 rapporten Zuidoost/mazo_bron_26.xlsx",
   overwrite = T
 )
 
@@ -377,7 +405,7 @@ for (i in seq_along(tabel)) {
 ## Save workbook voor lijst indicatoren
 saveWorkbook(
   wb,
-  "10 rapporten/03 rapporten Noord/aanpak_noord_bron.xlsx",
+  "10 rapporten/03 rapporten Noord/aanpak_noord_bron_26.xlsx",
   overwrite = T
 )
 
@@ -398,6 +426,6 @@ for (i in seq_along(tabel)) {
 ## Save workbook voor lijst indicatoren
 saveWorkbook(
   wb,
-  "10 rapporten/04 rapporten Nieuw-West/samen_nw_bron.xlsx",
+  "10 rapporten/04 rapporten Nieuw-West/samen_nw_bron_26.xlsx",
   overwrite = T
 )
