@@ -17,6 +17,7 @@ assets/
 04 tabellen/
 05 reports/
 10 rapporten/
+statistiekhub ruw/
 
 NPLV monitor overleg/*.*
 
@@ -34,7 +35,12 @@ NPLV monitor overleg/*.*
 *.docx
 *.pdf
 /*.pdf
+*.xlsx
 
+
+# zipfiles
+
+*.zip
 
 # RStudio files
 .Rproj.user/

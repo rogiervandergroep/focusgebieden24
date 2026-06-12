@@ -3,6 +3,8 @@ library(tidyverse)
 
 data_def2 <- read_rds("03 tussentijds/data_def2.rds")
 
+### Tijdelijke toevoeging
+
 data_merel <- data_def2 |>
   select(c(
     "indicator_sd",
@@ -26,7 +28,10 @@ data_merel <- data_def2 |>
     "kernindicator_nw",
     "spatial_date",
     "besch_jaren"
-  )) |>
+  ))
+
+
+data_merel_kern <- data_merel |>
   filter(
     kernindicator_zo == TRUE |
       kernindicator_noord == TRUE |
@@ -39,8 +44,21 @@ data_merel <- data_def2 |>
     )
   )
 
-write_csv(data_merel, "04 tabellen/data_meting2_jun_26.csv")
+### check aantal indicatorern
 
+unique(data_merel$measure)
+unique(data_merel_kern$measure)
+
+write_csv(data_merel, "04 tabellen/data_meting2_jun_26_alle_data.csv")
+
+
+Statistiekhub_meta |>
+  filter(Naam == 'WZDEPR_P')
+
+tets <- Statistiekhub_raw |>
+  filter(Indicatorid == 3048)
+
+write_csv(data_merel_kern, "04 tabellen/data_meting2_jun_26.csv")
 
 tabel_ind <- read_rds("03 tussentijds/tabel_ind.rds")
 

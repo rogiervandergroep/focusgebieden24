@@ -15,52 +15,125 @@ library(openxlsx)
 # inlezen Statistiekhub: gedownload van
 # https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#cijfers
 
-# https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#cijfers
+# 1. Download de zip
+download.file(
+  url = "https://api.data.amsterdam.nl/bulk-data/csv/statistieken_v2_all_openbaar.csv.zip",
+  destfile = "statistieken_v2_all_openbaar.csv.zip",
+  mode = "wb" # belangrijk voor binaire bestanden op Windows
+)
+
+# 2. Bekijk wat erin zit
+unzip("statistieken_v2_all_openbaar.csv.zip", list = TRUE)
+
+# 3. Alles uitpakken naar een map
+unzip(
+  "statistieken_v2_all_openbaar.csv.zip",
+  exdir = "00 ruwe data/statistiekhub ruw"
+)
+
+
+# # https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#cijfers
 Statistiekhub_raw <- readr::read_csv(
-  "https://acc.api.data.amsterdam.nl/v1/statistieken/v2/cijfers?_format=csv"
+  "00 ruwe data/statistiekhub ruw/statistieken_v2_cijfers_openbaar.csv"
 )
 
-# https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#indicatoren
+# # https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#indicatoren
 Statistiekhub_meta <- readr::read_csv(
-  "https://acc.api.data.amsterdam.nl/v1/statistieken/v2/indicatoren?_format=csv"
+  "00 ruwe data/statistiekhub ruw/statistieken_v2_indicatoren_openbaar.csv"
 )
 
-# https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#kengetallen
-Statistiekhub_kengetallen <- readr::read_csv(
-  "https://acc.api.data.amsterdam.nl/v1/statistieken/v2/kengetallen?_format=csv"
-)
-
+# # https://api.data.amsterdam.nl/v1/docs/datasets/statistieken@v2.html#kengetallen
+# Statistiekhub_kengetallen <- readr::read_csv(
+#   "https://acc.api.data.amsterdam.nl/v1/statistieken/v2/kengetallen?_format=csv"
+# )
 
 Statistiekhub_data <- Statistiekhub_raw |>
   select(
-    gebiedType,
-    gebiedCode,
-    begindatum,
-    indicatorId,
-    waarde
+    Gebiedtype,
+    Gebiedcode,
+    Begindatum,
+    Indicatorid,
+    Waarde
   )
 
-# inlezen META data
-Statistiekhub_meta <- read.csv(
-  "00 ruwe data/statistieken_v2_indicatoren_openbaar.csv"
-) |>
+Statistiekhub_meta <- Statistiekhub_meta |>
   select(Id, Naam)
+
 
 # opschonen data
 Statistiekhub_data_clean <- Statistiekhub_data |>
-  left_join(Statistiekhub_meta, by = c("indicatorId" = "Id")) |>
+  left_join(Statistiekhub_meta, by = c("Indicatorid" = "Id")) |>
   rename(
     measure = Naam,
-    value = waarde,
-    spatial_type = gebiedType,
-    spatial_code = gebiedCode,
-    temporal_date = begindatum
+    value = Waarde,
+    spatial_type = Gebiedtype,
+    spatial_code = Gebiedcode,
+    temporal_date = Begindatum
   ) |>
   mutate(
     spatial_code = replace_na(spatial_code, "NA")
   ) |>
+  mutate(temporal_date = format(lubridate::ymd(temporal_date), "%Y-%m-%d")) |>
   filter(temporal_date > lubridate::ymd("2018-01-01")) |>
   mutate(measure = str_to_lower(measure))
+
+#### tijdelijke oplossing WIA DATA toevoegen ----
+
+WIA_data <- openxlsx::read.xlsx(
+  "00 ruwe data/leefbaarheidscijfers_bbga_26.xlsx"
+) |>
+  select(-temporal_type) |>
+  mutate(temporal_date = format(lubridate::ymd(temporal_date), "%Y-%m-%d")) |>
+  mutate(measure = str_to_lower(measure))
+
+
+### data onveiligheidsindex toevoegen ---
+
+veiligheid_v_i <- bind_rows(
+  openxlsx::read.xlsx(
+    "00 ruwe data/veiligheidsindex_2026_1_84ebd334de.xlsx",
+    cols = c(1:3, 8)
+  ),
+
+  openxlsx::read.xlsx(
+    "00 ruwe data/veiligheidsindex_2026_1_84ebd334de.xlsx",
+    cols = c(1:2, 9, 14)
+  ),
+
+  openxlsx::read.xlsx(
+    "00 ruwe data/veiligheidsindex_2026_1_84ebd334de.xlsx",
+    cols = c(1:2, 15, 20)
+  ),
+
+  openxlsx::read.xlsx(
+    "00 ruwe data/veiligheidsindex_2026_1_84ebd334de.xlsx",
+    cols = c(1:2, 21, 26)
+  ),
+
+  openxlsx::read.xlsx(
+    "00 ruwe data/veiligheidsindex_2026_1_84ebd334de.xlsx",
+    cols = c(1:2, 27, 32)
+  ),
+
+  openxlsx::read.xlsx(
+    "00 ruwe data/veiligheidsindex_2026_1_84ebd334de.xlsx",
+    cols = c(1:2, 33, 38)
+  )
+) |>
+  rename(value = `2025`) |>
+  add_column(temporal_date = "2025-01-01")
+
+### samenvoegen nieuwe wia, update veiligheidsindex en
+
+Statistiekhub_data_clean_wia <- bind_rows(
+  Statistiekhub_data_clean,
+  veiligheid_v_i,
+  WIA_data
+) |>
+  select(spatial_type:measure)
+
+test <- Statistiekhub_data_clean_wia |>
+  filter(measure == "wzdepr_p")
 
 
 # opschonen meta data
@@ -96,11 +169,12 @@ tabel_ind <- read.xlsx(
 tabel_ind_Statistiekhub <- tabel_ind |>
   filter(bbga == TRUE)
 
+
 ######################################################
 ### stap 3 koppelen Statistiekhub-indicatoren aan Statistiekhub-data ---
 ######################################################
 
-Statistiekhub_data_def <- Statistiekhub_data_clean |>
+Statistiekhub_data_def <- Statistiekhub_data_clean_wia |>
 
   # koppel basislijst (input) aan lijst met alle Statistiekhub-indicatoren
   left_join(tabel_ind_Statistiekhub, by = "measure") |>
@@ -123,6 +197,7 @@ data_wel_Statistiekhub <- Statistiekhub_data_def |>
   mutate(temporal_date = as.character(temporal_date)) |>
   add_column(tweedeling_def = 'totaal') # als tweedeling_def ontbreekt dan wordt de waarde 'totaal'
 
+
 ####################################################
 ### stap 4 toevoegen data die NIET in Statistiekhub staat ---
 ####################################################
@@ -132,27 +207,21 @@ data_wel_Statistiekhub <- Statistiekhub_data_def |>
 # veiligheidsindexcijfers staan in Statistiekhub maar niet op stadsdeelniveau
 
 # deze variabelen staan ook in Statistiekhub, maar worden uit andere csv's gehaald want opnieuw berekend met tweedeling
+# in 2026 zijn geen data aangeleverd op tweedeling: voor deze tussenmeting wordt dus wel gekeken naar BBGA data
 uitzondering <- c(
-  "sruit4_p",
-  "pinzetbrt_p",
-  "pinform_p",
-  "wzbeweeg_p",
-  "wzdepr_p",
-  "wzzwaar_p",
-  "wzgezond_p"
-  # "v_onvbeleving_i", staan sinds 2026 niet meer in Statistiekhub > veiligheid in beeld
-  # "v_personovl_i", staan niet meer in Statistiekhub > veiligheid in beeld
-  # "v_vermijd_i", staan niet meer in Statistiekhub > veiligheid in beeld
-  # "v_verloed_i", staan niet meer in Statistiekhub > veiligheid in beeld
-  # "v_slacht_i", staan niet meer in Statistiekhub > veiligheid in beeld
-  # "v_gercrim_i", staan niet meer in Statistiekhub > veiligheid in beeld
-  # "iminjong130_p", staat nu wel in Statistiekhub
-  # "iminhh130_p" staat nu wel in Statistiekhub
+  # "sruit4_p",
+  # "pinzetbrt_p",
+  # "pinform_p",
+  # "wzbeweeg_p",
+  # "wzdepr_p",
+  # "wzzwaar_p",
+  # "wzgezond_p"
 )
 
 # selecteer indicatoren uit basislijst die NIET in Statistiekhub staan
 tabel_ind_niet_Statistiekhub <- tabel_ind |>
-  filter(bbga == FALSE | measure %in% uitzondering)
+  filter(bbga == FALSE) #| measure %in% uitzondering)
+
 
 # inlezen datasets die niet in Statistiekhub staat
 temp <- list.files("00 ruwe data/niet in bbga", full.names = T)

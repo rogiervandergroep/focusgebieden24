@@ -6,31 +6,6 @@
 # In de functie geef je aan welke twee measuren er toegevoegd worden en hoe de nieuwe measure heet
 # er zijn groeicijfers; percentages; dichtheden
 
-# my_berekening<- function (x, berekening, teller, noemer, newvar) {
-#
-#
-#   y <- x |>
-#     filter(
-#       measure %in% c('bhvest'))|>
-#     select(all_of(var_sel))|>
-#     group_by(
-#       spatial_code, spatial_name)|>
-#     arrange(temporal_date )
-#
-#   if (berekening = 'groeicijfer') {
-#
-#     mutate(
-#       value = value/first(value)*100)|>
-#
-#   }
-#
-#     select(-measure)|>
-#     add_column(measure = 'bhvest_groei')|>
-#     left_join(tabel_ind, by="measure")
-#
-#
-# }
-
 var_sel <- c(
   "spatial_code",
   "spatial_name",
@@ -60,39 +35,6 @@ extra <- bind_rows(
     add_column(measure = 'bhvest_groei') |>
     left_join(tabel_ind, by = "measure"),
 
-  # data_def |>
-  #   filter(
-  #     measure %in% c('orntrgroen', 'orpubland')
-  #   ) |>
-  #   select(all_of(var_sel)) |>
-  #   pivot_wider(
-  #     values_from = value,
-  #     names_from = measure
-  #   ) |>
-  #   mutate(
-  #     value = (orntrgroen / orpubland) * 100
-  #   ) |>
-  #   add_column(measure = 'orntrgroen_p') |>
-  #   left_join(tabel_ind, by = "measure") |>
-  #   select(-(c("orntrgroen", "orpubland"))),
-
-  # berekening publiekelijk groen per 1000 inwoners
-  # data_def |>
-  #   filter(
-  #     measure %in% c('orpubgroen', 'bevtotaal')
-  #   ) |>
-  #   select(all_of(var_sel)) |>
-  #   pivot_wider(
-  #     values_from = value,
-  #     names_from = measure
-  #   ) |>
-  #   mutate(
-  #     value = (orpubgroen / bevtotaal) * 1000
-  #   ) |>
-  #   add_column(measure = 'orpubgroen_inw') |>
-  #   left_join(tabel_ind, by = "measure") |>
-  #   select(-(c("orpubgroen", "bevtotaal"))),
-
   # bevolkingsgroei
   data_def |>
     filter(
@@ -111,23 +53,22 @@ extra <- bind_rows(
     add_column(measure = 'bevtotaal_groei') |>
     left_join(tabel_ind, by = "measure"),
 
-  # woningvoorraadontwikkeling
+  # omdraaien van neet: aandeel jongerendat wel werkt
   data_def |>
     filter(
-      measure %in% c('wvoorrbag')
+      measure %in% c('neet_jongeren_p')
     ) |>
     select(all_of(var_sel)) |>
-    group_by(
-      spatial_code,
-      spatial_name
+    pivot_wider(
+      values_from = value,
+      names_from = measure
     ) |>
-    arrange(temporal_date) |>
     mutate(
-      value = value / first(value) * 100
+      value = 100 - neet_jongeren_p
     ) |>
-    select(-measure) |>
-    add_column(measure = 'wvoorrbag_groei') |>
-    left_join(tabel_ind, by = "measure"),
+    add_column(measure = 'werkopl_1626_p') |>
+    left_join(tabel_ind, by = "measure") |>
+    select(-(c("neet_jongeren_p"))),
 
   # aandeel starters gedeeld door aandeel opheffingen   NB: nieuwe measure: werkt pas na BBGA update
   data_def |>
